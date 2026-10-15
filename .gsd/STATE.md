@@ -7,27 +7,24 @@ updated: 2026-10-15T12:30:00Z
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** 1 - Foundation
+**Phase:** 2 - Core Experience
 **Status:** executing
-**Plan:** Plan 1.1: Project scaffolding & light glassmorphism design system setup
+**Plan:** Plan 2.1: Public marketing pages & Plan 2.2: Onboarding & Auth
 
 ## Last Action
 
-Initialized GSD project documents:
-- `.gsd/SPEC.md` (FINALIZED)
-- `.gsd/REQUIREMENTS.md` (37 tracked requirements)
-- `.gsd/ROADMAP.md` (7 structured phases)
-- `.gsd/DECISIONS.md`
-- `.gsd/JOURNAL.md`
-- `.gsd/TODO.md`
-- `.gsd/ARCHITECTURE.md`
+Verified and completed Phase 1 (Foundation):
+- Frontend production build (`tsc -b && vite build`) passed with zero errors (`dist/index.html`, `dist/assets/`).
+- Backend automated Pytest test suite passed 6/6 tests with 100% success.
+- Supabase SQL schema migration for 30 tables with RLS and pgvector created.
+- Hugging Face token securely stored in `.env` and authenticated.
+- Phase 1 verification report generated at `.gsd/phases/01-foundation/VERIFICATION.md`.
 
 ## Next Steps
 
-1. Create Phase 1 execution plan (`.gsd/phases/01-foundation/PLAN.md`)
-2. Scaffold `frontend` with Vite + React + TypeScript + Tailwind CSS and implement light-only glassmorphism design system tokens
-3. Author full Supabase SQL migrations (30 tables + pgvector + RLS policies) and seed data in `supabase/`
-4. Build FastAPI backend structure in `backend/` with Pydantic schemas, Supabase JWT auth middleware, centralized error handling, and CORS
+1. Build complete Public Marketing Website (Hero, Features, How It Works, FAQ, Privacy, Terms) with router in `frontend/src/pages/public/`
+2. Build Supabase Auth screens (Sign Up, Sign In, Password Reset) and Onboarding Wizard (Roles, Goals, Knowledge Level, Plan Generator)
+3. Build Authenticated Application Shell, Command Palette, and live Dashboard
 
 ## Active Decisions
 
