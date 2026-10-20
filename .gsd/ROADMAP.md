@@ -41,15 +41,15 @@ updated: 2026-10-15T12:30:00Z
 ---
 
 ### Phase 2: Core Experience
-**Status:** 🔄 In Progress
+**Status:** ✅ Complete
 **Objective:** Deliver public marketing website, onboarding wizard, authenticated application shell, personalized dashboard, and user profile/settings.
 **Depends on:** Phase 1
 **Requirements:** REQ-06, REQ-07, REQ-08, REQ-09, REQ-10, NFR-02, NFR-06
 
 **Plans:**
-- [ ] Plan 2.1: Public marketing pages (Landing Page, Features, How It Works, About, FAQ, Legal)
-- [ ] Plan 2.2: Supabase Auth flows & onboarding wizard (Sign Up, Sign In, Profile setup, Goal selection)
-- [ ] Plan 2.3: Application shell, command palette, and personalized dashboard with live metrics
+- [x] Plan 2.1: Public marketing pages (Landing Page, Features, How It Works, About, FAQ, Legal)
+- [x] Plan 2.2: Supabase Auth flows & onboarding wizard (Sign Up, Sign In, Profile setup, Goal selection)
+- [x] Plan 2.3: Application shell, command palette, and personalized dashboard with live metrics
 
 ---
 
