@@ -61,8 +61,9 @@ export const AppShell: React.FC = () => {
   const navigationItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Knowledge Graph', path: '/dashboard?tab=graph', icon: Network, badge: 'Live' },
-    { label: 'Documents & Library', path: '/dashboard?tab=library', icon: BookOpen },
-    { label: 'Research Notes', path: '/dashboard?tab=notes', icon: FileText },
+    { label: 'Documents & Library', path: '/library', icon: BookOpen },
+    { label: 'Research Notes', path: '/notes/new', icon: FileText },
+    { label: 'Semantic Search', path: '/search', icon: Search, badge: 'Vector' },
     { label: 'Practice Center', path: '/dashboard?tab=practice', icon: Layers, badge: '6 Due' },
     { label: 'Flashcards Queue', path: '/dashboard?tab=flashcards', icon: Clock, badge: '14' },
     { label: 'Knowledge Gaps', path: '/dashboard?tab=gaps', icon: Compass, badge: '3' },

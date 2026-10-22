@@ -65,6 +65,16 @@ class AIProviderException(SynapseException):
         )
 
 
+class ValidationException(SynapseException):
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            error_code="VALIDATION_ERROR",
+            details=details,
+        )
+
+
 async def synapse_exception_handler(request: Request, exc: SynapseException) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "unknown")
     logger.warning(f"[{request_id}] App error {exc.error_code}: {exc.message}")

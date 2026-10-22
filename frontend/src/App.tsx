@@ -26,6 +26,9 @@ import { OnboardingWizard } from './pages/auth/OnboardingWizard';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ProfilePage } from './pages/profile/ProfilePage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { KnowledgeLibraryPage } from './pages/library/KnowledgeLibraryPage';
+import { NotesEditorPage } from './pages/notes/NotesEditorPage';
+import { SearchPage } from './pages/search/SearchPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -85,6 +88,12 @@ export function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/library" element={<KnowledgeLibraryPage />} />
+            <Route path="/notes" element={<KnowledgeLibraryPage />} />
+            <Route path="/notes/new" element={<NotesEditorPage />} />
+            <Route path="/notes/:id" element={<NotesEditorPage />} />
+            <Route path="/notes/edit" element={<NotesEditorPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

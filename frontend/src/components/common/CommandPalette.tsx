@@ -72,6 +72,28 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       action: () => { navigate('/profile'); onClose(); },
     },
     {
+      id: 'nav-library',
+      title: 'Knowledge Library & Documents',
+      category: 'Navigation',
+      icon: BookOpen,
+      action: () => { navigate('/library'); onClose(); },
+    },
+    {
+      id: 'nav-notes',
+      title: 'Research Notes & Insights',
+      category: 'Navigation',
+      icon: FileText,
+      action: () => { navigate('/notes/new'); onClose(); },
+    },
+    {
+      id: 'nav-search',
+      title: 'Hybrid Vector Semantic Search',
+      category: 'Navigation',
+      icon: Search,
+      badge: 'Vector 384d',
+      action: () => { navigate('/search'); onClose(); },
+    },
+    {
       id: 'nav-settings',
       title: 'Platform Settings & Export',
       category: 'Navigation',
@@ -93,7 +115,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       title: 'Draft New Research Note',
       category: 'Quick Actions',
       icon: FileText,
-      action: () => { navigate('/dashboard'); onClose(); },
+      badge: 'Editor',
+      action: () => { navigate('/notes/new'); onClose(); },
     },
 
     // Concepts

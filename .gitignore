@@ -10,6 +10,7 @@ dist/
 dist-ssr/
 *.local
 .npm/
+*.tsbuildinfo
 
 # Python & Backend
 __pycache__/
@@ -41,8 +42,12 @@ htmlcov/
 # IDE & OS
 .vscode/
 .idea/
+.gemini/
+.agent/
+.agents/
 *.swp
 *.swo
 .DS_Store
 Thumbs.db
 desktop.ini
+*.timestamp-*.mjs

@@ -7,29 +7,28 @@ updated: 2026-10-20T10:50:00Z
 ## Current Position
 
 **Milestone:** v1.0  
-**Phase:** 2 - Core Experience  
+**Phase:** 3 - Knowledge Management  
 **Status:** complete  
-**Next Phase:** Phase 3 - Knowledge Management  
+**Next Phase:** Phase 4 - AI Functionality  
 
 ## Last Action
 
-Verified and completed Phase 2 (Core Experience):
-- Delivered complete Public Marketing Website suite (8 routes: `/`, `/features`, `/how-it-works`, `/about`, `/faq`, `/privacy`, `/terms`, `/contact`) with strictly light-only glassmorphism.
-- Implemented Supabase Auth client integration and forms with Zod validation (`/login`, `/signup`, `/forgot-password`, `/onboarding`) and 1-click Demo mode.
-- Built 5-step interactive Onboarding Wizard capturing role, educational level, subjects, baseline Bayesian knowledge prior, study cadence, and auto-generated concept queue.
-- Delivered authenticated Application Shell (`AppShell.tsx`) with collapsible 13-item navigation, mobile drawer, glassmorphic topbar, and keyboard-driven Command Palette (`Ctrl+K`).
-- Built personalized Learning Dashboard (`/dashboard`) with 6 metric cards, Recharts AreaChart (Knowledge Evolution) and RadarChart (Subject Mastery), AI recommendations, and Continue Learning queue.
-- Built Profile and Settings pages with study cadence controls, data export (JSON & CSV), and account deletion flow.
-- Verified frontend build (`npm run build`: `tsc -b && vite build`) passed with zero errors (`dist/index.html`, `dist/assets/`).
-- Verified backend Pytest test suite passed 6/6 tests with 100% success.
-- Phase 2 verification summary generated at `.gsd/phases/02-core-experience/SUMMARY.md`.
+Verified and completed Phase 3 (Knowledge Management):
+- Delivered Knowledge Library (`KnowledgeLibraryPage.tsx`) with multi-type filters (All, Documents, Notes, Articles), subject pills, and document upload triggers.
+- Implemented rich Markdown and LaTeX Notes Editor (`NotesEditorPage.tsx`) with dual-pane preview, autosave indicators, reading time, tag editor, and AI action bar.
+- Built PDF document ingestion pipeline using pure-Python `pypdf` (`PDFParserService`) and `RecursiveCharacterChunker` (500–700 chars, 100-char overlap, page boundary preservation).
+- Integrated Hugging Face 384-dimensional dense embeddings (`sentence-transformers/all-MiniLM-L6-v2`) via `DocumentIndexerService`.
+- Built Hybrid Semantic & Citation Search API (`POST /api/v1/search`) and dedicated Search Page (`SearchPage.tsx`) with similarity threshold slider, top-k match count, exact citations, and one-click citation copying.
+- Verified backend Pytest test suite passed 11/11 tests (100% success).
+- Verified frontend build (`npm run build`: `tsc -b && vite build`) passed with 0 errors (`dist/index.html`, `dist/assets/index.js` 1,102 kB, `dist/assets/index.css` 38.6 kB).
+- Created `.gsd/phases/03-knowledge-management/SUMMARY.md`.
 
 ## Next Steps
 
-1. Begin Phase 3: Knowledge Management:
-   - Plan 3.1: Knowledge Library CRUD, subject filtering, tags, and Markdown notes editor with autosave.
-   - Plan 3.2: PDF document upload to Supabase Storage, text extraction, chunking, and metadata storage.
-   - Plan 3.3: Hugging Face vector embeddings generation, vector storage in pgvector, and hybrid semantic retrieval.
+1. Begin Phase 4: AI Functionality:
+   - Plan 4.1: Grounded RAG Assistant with strict source citations and zero hallucination.
+   - Plan 4.2: Hugging Face conversational intelligence and structured prompt engineering.
+   - Plan 4.3: Automated concept extraction from document chunks and linking to Knowledge Graph.
 
 ## Active Decisions
 
