@@ -29,6 +29,7 @@ import { SettingsPage } from './pages/settings/SettingsPage';
 import { KnowledgeLibraryPage } from './pages/library/KnowledgeLibraryPage';
 import { NotesEditorPage } from './pages/notes/NotesEditorPage';
 import { SearchPage } from './pages/search/SearchPage';
+import { AIAssistantPage } from './pages/assistant/AIAssistantPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -94,6 +95,7 @@ export function App() {
             <Route path="/notes/:id" element={<NotesEditorPage />} />
             <Route path="/notes/edit" element={<NotesEditorPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/assistant" element={<AIAssistantPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

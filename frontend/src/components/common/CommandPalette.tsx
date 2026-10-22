@@ -94,6 +94,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       action: () => { navigate('/search'); onClose(); },
     },
     {
+      id: 'nav-assistant',
+      title: 'Grounded AI Assistant & Research Chat',
+      category: 'Navigation',
+      icon: Sparkles,
+      badge: 'RAG Citations',
+      action: () => { navigate('/assistant'); onClose(); },
+    },
+    {
       id: 'nav-settings',
       title: 'Platform Settings & Export',
       category: 'Navigation',
@@ -102,6 +110,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     },
 
     // Quick Actions
+    {
+      id: 'act-ask-ai',
+      title: 'Ask AI Grounded Question...',
+      category: 'Quick Actions',
+      icon: Sparkles,
+      badge: 'RAG',
+      action: () => { navigate('/assistant'); onClose(); },
+    },
     {
       id: 'act-practice',
       title: 'Start Daily Retrieval Practice',

@@ -255,6 +255,12 @@ export const NotesEditorPage: React.FC = () => {
           >
             Summarize Note
           </button>
+          <button
+            onClick={() => navigate(`/assistant?q=${encodeURIComponent(`Explain key concepts from note: ${title}`)}`)}
+            className="px-3 py-1 rounded-xl text-xs font-semibold bg-primary text-white hover:bg-primary-hover transition-colors shadow-2xs"
+          >
+            Chat with AI
+          </button>
         </div>
       </div>
 

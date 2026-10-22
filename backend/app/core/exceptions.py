@@ -75,6 +75,16 @@ class ValidationException(SynapseException):
         )
 
 
+class RateLimitException(SynapseException):
+    def __init__(self, message: str = "Rate limit exceeded. Please wait before retrying.", details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            error_code="RATE_LIMIT_EXCEEDED",
+            details=details,
+        )
+
+
 async def synapse_exception_handler(request: Request, exc: SynapseException) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "unknown")
     logger.warning(f"[{request_id}] App error {exc.error_code}: {exc.message}")

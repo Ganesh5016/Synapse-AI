@@ -353,6 +353,15 @@ export const SearchPage: React.FC = () => {
                       <FileText className="w-3.5 h-3.5 mr-1.5 text-primary" />
                       Insert into Note
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/assistant?q=${encodeURIComponent(`Explain this passage from ${result.document_title}: "${result.content.slice(0, 100)}..."`)}`)}
+                      className="text-xs text-primary hover:bg-primary-light/40"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 mr-1.5 text-primary" />
+                      Ask AI
+                    </Button>
                   </div>
                 </div>
               </div>

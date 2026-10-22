@@ -326,6 +326,12 @@ export const KnowledgeLibraryPage: React.FC = () => {
                     </Link>
                   )}
 
+                  <Link to={`/assistant?q=${encodeURIComponent(`Explain and synthesize: ${item.title}`)}`}>
+                    <Button variant="ghost" size="sm" className="text-xs py-1 px-2 text-primary hover:bg-primary-light/40" title="Ask AI about this item">
+                      <Sparkles className="w-3.5 h-3.5 mr-1 text-primary" /> Ask AI
+                    </Button>
+                  </Link>
+
                   <button
                     onClick={() => handleDeleteItem(item.id)}
                     className="p-1.5 rounded-lg text-muted hover:text-error hover:bg-error-light/40 transition-colors"

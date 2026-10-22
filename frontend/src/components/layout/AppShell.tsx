@@ -68,7 +68,7 @@ export const AppShell: React.FC = () => {
     { label: 'Flashcards Queue', path: '/dashboard?tab=flashcards', icon: Clock, badge: '14' },
     { label: 'Knowledge Gaps', path: '/dashboard?tab=gaps', icon: Compass, badge: '3' },
     { label: 'Study Planner', path: '/dashboard?tab=planner', icon: Calendar },
-    { label: 'Grounded Assistant', path: '/dashboard?tab=assistant', icon: Sparkles },
+    { label: 'Grounded Assistant', path: '/assistant', icon: Sparkles, badge: 'AI' },
     { label: 'Mastery Analytics', path: '/dashboard?tab=analytics', icon: BarChart3 },
     { label: 'My Profile', path: '/profile', icon: User },
     { label: 'Settings & Export', path: '/settings', icon: Settings },
