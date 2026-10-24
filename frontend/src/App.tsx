@@ -30,6 +30,12 @@ import { KnowledgeLibraryPage } from './pages/library/KnowledgeLibraryPage';
 import { NotesEditorPage } from './pages/notes/NotesEditorPage';
 import { SearchPage } from './pages/search/SearchPage';
 import { AIAssistantPage } from './pages/assistant/AIAssistantPage';
+import { KnowledgeGraphPage } from './pages/graph/KnowledgeGraphPage';
+import { ConceptDetailPage } from './pages/graph/ConceptDetailPage';
+import { KnowledgeGapsPage } from './pages/mastery/KnowledgeGapsPage';
+import { PracticeCenterPage } from './pages/practice/PracticeCenterPage';
+import { FlashcardsQueuePage } from './pages/flashcards/FlashcardsQueuePage';
+import { LearningPathsPage } from './pages/learning-paths/LearningPathsPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -96,6 +102,12 @@ export function App() {
             <Route path="/notes/edit" element={<NotesEditorPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/assistant" element={<AIAssistantPage />} />
+            <Route path="/graph" element={<KnowledgeGraphPage />} />
+            <Route path="/concepts/:id" element={<ConceptDetailPage />} />
+            <Route path="/practice" element={<PracticeCenterPage />} />
+            <Route path="/flashcards" element={<FlashcardsQueuePage />} />
+            <Route path="/gaps" element={<KnowledgeGapsPage />} />
+            <Route path="/learning-paths" element={<LearningPathsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

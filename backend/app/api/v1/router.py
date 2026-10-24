@@ -9,6 +9,11 @@ from app.api.v1.documents import router as documents_router
 from app.api.v1.search import router as search_router
 from app.api.v1.subjects import router as subjects_router
 from app.api.v1.ai import router as ai_router
+from app.api.v1.concepts import router as concepts_router
+from app.api.v1.mastery import router as mastery_router
+from app.api.v1.practice import router as practice_router
+from app.api.v1.flashcards import router as flashcards_router
+from app.api.v1.learning_paths import router as learning_paths_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -19,3 +24,8 @@ api_v1_router.include_router(documents_router)
 api_v1_router.include_router(search_router)
 api_v1_router.include_router(subjects_router)
 api_v1_router.include_router(ai_router)
+api_v1_router.include_router(concepts_router)
+api_v1_router.include_router(mastery_router)
+api_v1_router.include_router(practice_router)
+api_v1_router.include_router(flashcards_router)
+api_v1_router.include_router(learning_paths_router)

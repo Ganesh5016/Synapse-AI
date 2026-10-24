@@ -79,3 +79,7 @@ async def list_subjects(
 ):
     """Retrieves all global and custom subjects."""
     return APIResponse(data=PREDEFINED_SUBJECTS, message="Subjects retrieved successfully")
+
+
+# In-memory alias for cross-module lookup
+_LOCAL_SUBJECTS_DB = PREDEFINED_SUBJECTS

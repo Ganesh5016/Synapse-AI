@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
@@ -85,6 +85,7 @@ const CONTINUE_LEARNING_ITEMS = [
 ];
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tab = searchParams.get('tab');
   const { profile, goals } = useAuth();
@@ -110,7 +111,12 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 z-10">
-          <Button variant="primary" size="md" className="shadow-md shadow-primary/20">
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => navigate('/practice')}
+            className="shadow-md shadow-primary/20"
+          >
             <Play className="w-4 h-4 mr-1.5 fill-current" /> Start Daily Practice
           </Button>
         </div>
@@ -283,10 +289,10 @@ export const DashboardPage: React.FC = () => {
                 You recently mastered <strong className="text-primary-text">Self-Attention Mechanism (94%)</strong>. However, prerequisite validation indicates your retention on <strong className="text-primary-text">Singular Value Decomposition (SVD)</strong> has dipped to 58%. Reviewing SVD now will accelerate your comprehension of low-rank adaptation (LoRA) and multi-head projections.
               </p>
               <div className="pt-2 flex gap-3">
-                <Button variant="primary" size="sm">
+                <Button variant="primary" size="sm" onClick={() => navigate('/flashcards')}>
                   Review SVD Flashcards (6 Cards)
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => navigate('/graph')}>
                   View Prerequisite Node
                 </Button>
               </div>
@@ -334,7 +340,7 @@ export const DashboardPage: React.FC = () => {
               Prioritized according to Bayesian knowledge decay and upcoming spaced repetition deadlines.
             </CardDescription>
           </div>
-          <Link to="/dashboard?tab=practice">
+          <Link to="/practice">
             <Button variant="outline" size="sm">
               View All Due Items
             </Button>
@@ -379,7 +385,11 @@ export const DashboardPage: React.FC = () => {
                   {item.urgency}
                 </Badge>
 
-                <Button variant="secondary" size="sm">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(item.type.includes('Flashcard') ? '/flashcards' : '/practice')}
+                >
                   Practice
                 </Button>
               </div>

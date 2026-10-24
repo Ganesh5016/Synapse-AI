@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-22T13:45:00Z
+updated: 2026-10-22T14:20:00Z
 ---
 
 # Project State — Synapse
@@ -7,29 +7,28 @@ updated: 2026-10-22T13:45:00Z
 ## Current Position
 
 **Milestone:** v1.0  
-**Phase:** 4 - AI Functionality  
+**Phase:** 5 - Learning Intelligence  
 **Status:** complete  
-**Next Phase:** Phase 5 - Learning Intelligence  
+**Next Phase:** Phase 6 - Planning & Analytics  
 
 ## Last Action
 
-Verified and completed Phase 4 (AI Functionality):
-- Implemented multi-model Hugging Face inference service (`HuggingFaceInferenceService`) with in-memory sliding-window rate limiting, exponential backoff with jitter on 429/503, model health monitoring, and offline fallback degradation (NFR-07).
-- Delivered Grounded RAG Engine (`GroundedRAGEngine`) with multi-user isolation filters, context citation anchors (`[1]`, `[2]`), zero-hallucination protection, and structured citation card emission.
-- Built Conversation & Message persistence APIs (`/api/v1/ai/conversations`, `/api/v1/ai/chat`).
-- Implemented Cognitive Learning Generators (`CognitiveExtractorService`) for automated concept extraction (`/api/v1/ai/extract-concepts`), practice question generation (`/api/v1/ai/generate-questions`), and SM-2 flashcard generation (`/api/v1/ai/generate-flashcards`).
-- Built dedicated light-glassmorphic Synapse AI Assistant page (`AIAssistantPage.tsx` at `/assistant`), integrated with `AppShell.tsx`, `CommandPalette.tsx`, `NotesEditorPage.tsx`, `KnowledgeLibraryPage.tsx`, and `SearchPage.tsx`.
-- Verified 100% of backend tests passing (26/26 tests).
-- Verified frontend production build (`npm run build`: `tsc -b && vite build`) passed with 0 errors (`dist/index.html`, `dist/assets/index.js` 1,124 kB, `dist/assets/index.css` 41.2 kB).
-- Created `.gsd/phases/04-ai-functionality/SUMMARY.md`.
+- Completed, tested, and verified Phase 5 (Learning Intelligence):
+  - Interactive Knowledge Graph (`/graph`) using `@xyflow/react` v12 with custom glassmorphic concept nodes and inspection drawer.
+  - Concept Blueprint and prerequisite explorer (`/concepts/:id`).
+  - Bayesian Knowledge Tracing (BKT) 2-state HMM engine with posterior updates and memory decay.
+  - Automated Knowledge Gap detector and dashboard (`/gaps`) with 1-click remediation.
+  - Adaptive Practice Center (`/practice`) with hints, explanations, and instant BKT mastery scoring.
+  - SuperMemo SM-2 Spaced Repetition flashcards (`/flashcards`) with 3D card flip and interval scheduling ($EF \ge 1.3$).
+  - Personalized Learning Paths (`/learning-paths`) with topological DAG sequencing and progress tracking.
+  - Backend API routers mounted in `/api/v1` and verified with 40/40 tests passing.
+  - Frontend production build (`tsc -b && vite build`) passed with 0 errors (2,595 modules transformed).
 
 ## Next Steps
 
-1. Begin Phase 5: Learning Intelligence:
-   - Plan 5.1: Interactive React Flow Knowledge Graph and Concept Explorer detail pages.
-   - Plan 5.2: Mastery tracking engine (Bayesian Knowledge Tracing) and automated Knowledge Gap detection system.
-   - Plan 5.3: Adaptive Practice Center (MCQ, True/False, Short Answer, Hints, Review) and SM-2 Spaced Repetition Flashcards.
-   - Plan 5.4: Personalized AI Learning Path generation and progress tracker.
+1. Plan Phase 6 (Planning & Analytics):
+   - Study Planner calendar, session tracking, and scheduled review alarms.
+   - Mastery Analytics, radar proficiency charts, cognitive load index, and exportable reports.
 
 ## Active Decisions
 
@@ -41,6 +40,7 @@ Verified and completed Phase 4 (AI Functionality):
 | DECISION-004 | Bayesian Knowledge Tracing & SM-2 Scheduler | 2026-10-15 | Mastery tracking and flashcard algorithms |
 | DECISION-005 | Command Palette (Ctrl+K) & Demo Mode | 2026-10-20 | Application Shell navigation and demo accessibility |
 | DECISION-006 | Strict Grounded RAG with Citation Markers | 2026-10-22 | Phase 4 conversational AI assistant and RAG pipeline |
+| DECISION-007 | React Flow v12 Custom Glassmorphic Graph Nodes | 2026-10-22 | Phase 5 Knowledge Graph visualization and interactions |
 
 ## Blockers
 
@@ -48,4 +48,4 @@ None.
 
 ## Concerns
 
-- Ensure React Flow rendering in Phase 5 maintains 60fps with large concept graphs and custom glassmorphic node/edge styles.
+- Maintain smooth canvas pan/zoom performance in React Flow when rendering prerequisite directed edges and mastery status badges.
