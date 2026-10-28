@@ -23,7 +23,8 @@ import {
   X, 
   LogOut, 
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  FolderKanban
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -67,9 +68,11 @@ export const AppShell: React.FC = () => {
     { label: 'Practice Center', path: '/practice', icon: Layers, badge: '6 Due' },
     { label: 'Flashcards Queue', path: '/flashcards', icon: Clock, badge: '4 Due' },
     { label: 'Knowledge Gaps', path: '/gaps', icon: Compass, badge: '2 Gaps' },
-    { label: 'Learning Paths', path: '/learning-paths', icon: Calendar, badge: 'DAG' },
+    { label: 'Learning Paths', path: '/learning-paths', icon: Brain, badge: 'DAG' },
+    { label: 'Study Planner', path: '/planner', icon: Calendar, badge: 'SM-2' },
+    { label: 'Project Workspaces', path: '/projects', icon: FolderKanban },
     { label: 'Grounded Assistant', path: '/assistant', icon: Sparkles, badge: 'AI' },
-    { label: 'Mastery Analytics', path: '/dashboard?tab=analytics', icon: BarChart3 },
+    { label: 'Mastery Analytics', path: '/analytics', icon: BarChart3, badge: 'BKT' },
     { label: 'My Profile', path: '/profile', icon: User },
     { label: 'Settings & Export', path: '/settings', icon: Settings },
     { label: 'Help & Docs', path: '/faq', icon: HelpCircle },

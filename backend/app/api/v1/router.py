@@ -14,6 +14,9 @@ from app.api.v1.mastery import router as mastery_router
 from app.api.v1.practice import router as practice_router
 from app.api.v1.flashcards import router as flashcards_router
 from app.api.v1.learning_paths import router as learning_paths_router
+from app.api.v1.planner import router as planner_router
+from app.api.v1.projects import router as projects_router
+from app.api.v1.analytics import router as analytics_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -29,3 +32,6 @@ api_v1_router.include_router(mastery_router)
 api_v1_router.include_router(practice_router)
 api_v1_router.include_router(flashcards_router)
 api_v1_router.include_router(learning_paths_router)
+api_v1_router.include_router(planner_router)
+api_v1_router.include_router(projects_router)
+api_v1_router.include_router(analytics_router)

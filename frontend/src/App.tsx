@@ -36,6 +36,9 @@ import { KnowledgeGapsPage } from './pages/mastery/KnowledgeGapsPage';
 import { PracticeCenterPage } from './pages/practice/PracticeCenterPage';
 import { FlashcardsQueuePage } from './pages/flashcards/FlashcardsQueuePage';
 import { LearningPathsPage } from './pages/learning-paths/LearningPathsPage';
+import { StudyPlannerPage } from './pages/planner/StudyPlannerPage';
+import { ProjectWorkspacePage } from './pages/projects/ProjectWorkspacePage';
+import { MasteryAnalyticsPage } from './pages/analytics/MasteryAnalyticsPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -108,6 +111,9 @@ export function App() {
             <Route path="/flashcards" element={<FlashcardsQueuePage />} />
             <Route path="/gaps" element={<KnowledgeGapsPage />} />
             <Route path="/learning-paths" element={<LearningPathsPage />} />
+            <Route path="/planner" element={<StudyPlannerPage />} />
+            <Route path="/projects" element={<ProjectWorkspacePage />} />
+            <Route path="/analytics" element={<MasteryAnalyticsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

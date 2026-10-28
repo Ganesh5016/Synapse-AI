@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-22T14:20:00Z
+updated: 2026-10-28T14:40:00Z
 ---
 
 # Project State — Synapse
@@ -7,28 +7,27 @@ updated: 2026-10-22T14:20:00Z
 ## Current Position
 
 **Milestone:** v1.0  
-**Phase:** 5 - Learning Intelligence  
+**Phase:** 6 - Planning & Analytics  
 **Status:** complete  
-**Next Phase:** Phase 6 - Planning & Analytics  
+**Next Phase:** Phase 7 - Reliability & Release  
 
 ## Last Action
 
-- Completed, tested, and verified Phase 5 (Learning Intelligence):
-  - Interactive Knowledge Graph (`/graph`) using `@xyflow/react` v12 with custom glassmorphic concept nodes and inspection drawer.
-  - Concept Blueprint and prerequisite explorer (`/concepts/:id`).
-  - Bayesian Knowledge Tracing (BKT) 2-state HMM engine with posterior updates and memory decay.
-  - Automated Knowledge Gap detector and dashboard (`/gaps`) with 1-click remediation.
-  - Adaptive Practice Center (`/practice`) with hints, explanations, and instant BKT mastery scoring.
-  - SuperMemo SM-2 Spaced Repetition flashcards (`/flashcards`) with 3D card flip and interval scheduling ($EF \ge 1.3$).
-  - Personalized Learning Paths (`/learning-paths`) with topological DAG sequencing and progress tracking.
-  - Backend API routers mounted in `/api/v1` and verified with 40/40 tests passing.
-  - Frontend production build (`tsc -b && vite build`) passed with 0 errors (2,595 modules transformed).
+- Completed, tested, and verified Phase 6 (Planning & Analytics):
+  - Study Planner & Revision Calendar (`/planner`) with Day/Week/Month views, scheduled sessions, and direct links to Practice and SM-2 Flashcards.
+  - Project Knowledge Mapping Workspaces (`/projects`) uniting notes, research papers, pinned concepts, and milestone checklists with Markdown export.
+  - Multidimensional Learning Analytics (`/analytics`) featuring Recharts radar charts for subject mastery, cognitive load vs retention trajectories, and daily questions bar chart.
+  - Automated AI Weekly Synthesis Report modal and streaming CSV learning activity export.
+  - Full AppShell and Command Palette (`Ctrl+K`) integration for all Phase 6 routes.
+  - Backend API routers mounted in `/api/v1` and verified with 43/43 tests passing.
+  - Frontend production build (`tsc -b && vite build`) passed with 0 errors (2,598 modules transformed).
 
 ## Next Steps
 
-1. Plan Phase 6 (Planning & Analytics):
-   - Study Planner calendar, session tracking, and scheduled review alarms.
-   - Mastery Analytics, radar proficiency charts, cognitive load index, and exportable reports.
+1. Execute Phase 7 (Reliability & Release):
+   - Multi-user isolation verification and security audit.
+   - Comprehensive test suite completion across backend and frontend.
+   - Production Dockerfile, deployment manifests, and final architecture documentation.
 
 ## Active Decisions
 
@@ -41,6 +40,9 @@ updated: 2026-10-22T14:20:00Z
 | DECISION-005 | Command Palette (Ctrl+K) & Demo Mode | 2026-10-20 | Application Shell navigation and demo accessibility |
 | DECISION-006 | Strict Grounded RAG with Citation Markers | 2026-10-22 | Phase 4 conversational AI assistant and RAG pipeline |
 | DECISION-007 | React Flow v12 Custom Glassmorphic Graph Nodes | 2026-10-22 | Phase 5 Knowledge Graph visualization and interactions |
+| DECISION-008 | Dual Storage SM-2 / BKT | 2026-10-24 | Spaced repetition and probabilistic concept mastery |
+| DECISION-009 | Recharts Psychometric Analytics | 2026-10-28 | Multidimensional mastery radar and cognitive load curves |
+| DECISION-010 | Integrated Temporal & Workspace Routing | 2026-10-28 | Unified navigation linking Planner/Projects to Practice/Graph |
 
 ## Blockers
 
@@ -48,4 +50,4 @@ None.
 
 ## Concerns
 
-- Maintain smooth canvas pan/zoom performance in React Flow when rendering prerequisite directed edges and mastery status badges.
+- Ensure responsive layout maintains clear readability on smaller viewports for complex multi-series Recharts and the Month calendar grid.

@@ -16,7 +16,8 @@ import {
   HelpCircle, 
   ArrowRight,
   Zap,
-  CornerDownLeft
+  CornerDownLeft,
+  FolderKanban
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -87,6 +88,30 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       icon: Calendar,
       badge: 'Curriculum',
       action: () => { navigate('/learning-paths'); onClose(); },
+    },
+    {
+      id: 'nav-planner',
+      title: 'Study Planner & Revision Calendar',
+      category: 'Navigation',
+      icon: Calendar,
+      badge: 'SM-2',
+      action: () => { navigate('/planner'); onClose(); },
+    },
+    {
+      id: 'nav-projects',
+      title: 'Project Knowledge Workspaces',
+      category: 'Navigation',
+      icon: FolderKanban,
+      badge: 'Kanban',
+      action: () => { navigate('/projects'); onClose(); },
+    },
+    {
+      id: 'nav-analytics',
+      title: 'Mastery & Psychometric Analytics',
+      category: 'Navigation',
+      icon: BarChart3,
+      badge: 'BKT Engine',
+      action: () => { navigate('/analytics'); onClose(); },
     },
     {
       id: 'nav-profile',
