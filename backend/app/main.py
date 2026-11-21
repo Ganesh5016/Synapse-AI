@@ -82,6 +82,19 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, global_exception_handler)
 
 # Mount Routes
+@app.get("/")
+async def root():
+    """Root endpoint welcoming visitors and providing service status."""
+    return {
+        "status": "online",
+        "service": "Synapse AI Backend API",
+        "version": settings.APP_VERSION,
+        "health": "/health",
+        "api_v1": "/api/v1",
+        "docs": "/docs",
+    }
+
+
 app.include_router(root_health_router)
 app.include_router(api_v1_router)
 
