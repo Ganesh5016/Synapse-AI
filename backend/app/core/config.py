@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
 
     # Supabase Configuration
-    SUPABASE_URL: str = Field(default="http://localhost:54321", description="Supabase project URL")
-    SUPABASE_ANON_KEY: str = Field(default="mock-anon-key", description="Supabase public anon key")
+    SUPABASE_URL: str = Field(default="https://sqpxcjgubxfesiimofjn.supabase.co", description="Supabase project URL")
+    SUPABASE_ANON_KEY: str = Field(default="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxcHhjamd1YnhmZXNpaW1vZmpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwNDIwMjEsImV4cCI6MjEwNzYxODAyMX0.-Dd3CQPKOHgJV4LBDCQI6mGA-n9cDOUA8QIRwkZ9_SM", description="Supabase public anon key")
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None, description="Privileged service role key")
     SUPABASE_JWT_SECRET: Optional[str] = Field(default=None, description="Supabase JWT secret for verification")
     SUPABASE_STORAGE_BUCKET_DOCS: str = "documents"
