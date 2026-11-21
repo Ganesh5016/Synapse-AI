@@ -133,7 +133,10 @@ async def list_study_sessions(
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
     """Lists study sessions with optional completion or subject filter."""
-    filtered = _LOCAL_SESSIONS_DB
+    filtered = [
+        s for s in _LOCAL_SESSIONS_DB
+        if not s.get("user_id") or str(s["user_id"]) == str(current_user.id)
+    ]
     if is_completed is not None:
         filtered = [s for s in filtered if s["is_completed"] == is_completed]
     if subject_id:
@@ -156,6 +159,7 @@ async def create_study_session(
 
     session_record = {
         "id": new_id,
+        "user_id": str(current_user.id),
         "title": payload.title,
         "description": payload.description,
         "subject_id": payload.subject_id,
@@ -228,6 +232,9 @@ async def update_study_session(
     if not target:
         raise HTTPException(status_code=404, detail="Study session not found")
 
+    if target.get("user_id") and str(target["user_id"]) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden: You cannot modify another user's session")
+
     now = datetime.now(timezone.utc)
     if payload.title is not None:
         target["title"] = payload.title
@@ -256,6 +263,9 @@ async def delete_study_session(
     existing = next((s for s in _LOCAL_SESSIONS_DB if s["id"] == session_id), None)
     if not existing:
         raise HTTPException(status_code=404, detail="Study session not found")
+
+    if existing.get("user_id") and str(existing["user_id"]) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden: You cannot delete another user's session")
 
     _LOCAL_SESSIONS_DB = [s for s in _LOCAL_SESSIONS_DB if s["id"] != session_id]
     return APIResponse(data={"deleted_id": session_id}, message="Study session removed")

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 import { 
   Sparkles, 
@@ -25,77 +25,42 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../..
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
-
-// Chart Data
-const EVOLUTION_DATA = [
-  { day: 'Mon', mastery: 64, retention: 80, questions: 22 },
-  { day: 'Tue', mastery: 68, retention: 79, questions: 35 },
-  { day: 'Wed', mastery: 72, retention: 83, questions: 18 },
-  { day: 'Thu', mastery: 76, retention: 82, questions: 42 },
-  { day: 'Fri', mastery: 81, retention: 86, questions: 30 },
-  { day: 'Sat', mastery: 87, retention: 88, questions: 48 },
-  { day: 'Sun', mastery: 92, retention: 89, questions: 25 },
-];
-
-const SUBJECT_MASTERY_DATA = [
-  { subject: 'Machine Learning', score: 88, fullMark: 100 },
-  { subject: 'Math & Stats', score: 78, fullMark: 100 },
-  { subject: 'Systems & OS', score: 65, fullMark: 100 },
-  { subject: 'Algorithms', score: 82, fullMark: 100 },
-  { subject: 'Cognitive Science', score: 94, fullMark: 100 },
-];
-
-const CONTINUE_LEARNING_ITEMS = [
-  {
-    id: 'item-1',
-    title: 'Transformer Attention Mechanisms',
-    subject: 'Machine Learning & AI',
-    type: 'Concept Review',
-    mastery: 84,
-    urgency: 'Due Today',
-    urgencyColor: 'warning',
-  },
-  {
-    id: 'item-2',
-    title: 'Bayesian Knowledge Tracing (BKT) Equations',
-    subject: 'Cognitive Science',
-    type: 'Flashcard Retrieval',
-    mastery: 72,
-    urgency: 'Scheduled',
-    urgencyColor: 'primary',
-  },
-  {
-    id: 'item-3',
-    title: 'Singular Value Decomposition (SVD)',
-    subject: 'Mathematics & Statistics',
-    type: 'Prerequisite Check',
-    mastery: 58,
-    urgency: 'Knowledge Gap',
-    urgencyColor: 'error',
-  },
-  {
-    id: 'item-4',
-    title: 'CPU Cache Coherence (MESI Protocol)',
-    subject: 'Systems & Architecture',
-    type: 'Practice Quiz',
-    mastery: 69,
-    urgency: 'Due in 2 days',
-    urgencyColor: 'secondary',
-  },
-];
+import { getRealDashboardMetrics } from '../../services/userProgress';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tab = searchParams.get('tab');
-  const { profile, goals } = useAuth();
+  const { user, profile, goals } = useAuth();
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState('All');
 
-  const greetingName = profile?.display_name || 'Learner';
+  const [metrics, setMetrics] = useState(() => getRealDashboardMetrics(user?.id));
+
+  useEffect(() => {
+    setMetrics(getRealDashboardMetrics(user?.id));
+
+    const handleProgressUpdate = () => {
+      setMetrics(getRealDashboardMetrics(user?.id));
+    };
+
+    window.addEventListener('synapse_progress_updated', handleProgressUpdate);
+    return () => window.removeEventListener('synapse_progress_updated', handleProgressUpdate);
+  }, [user?.id]);
+
+  const rawName = profile?.display_name || 
+                  user?.user_metadata?.display_name || 
+                  user?.user_metadata?.full_name || 
+                  (user?.email ? user.email.split('@')[0] : '');
+
+  const greetingName = (rawName && rawName !== 'Alex Chen' && rawName !== 'Learner')
+    ? (rawName.charAt(0).toUpperCase() + rawName.slice(1))
+    : 'Scholar';
+
+  const hasMastery = metrics.masteredNodesCount > 0;
 
   return (
     <div className="space-y-8 pb-12">
-      {/* 1. DYNAMIC WELCOME SECTION */}
+      {/* 1. DYNAMIC AUTHENTIC WELCOME SECTION */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-primary-light/40 via-white to-accent-light/30 p-6 sm:p-8 rounded-3xl border border-primary/20 shadow-sm relative overflow-hidden">
         <div className="space-y-1.5 z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-muted-border/80 text-xs font-semibold text-primary mb-1">
@@ -106,7 +71,9 @@ export const DashboardPage: React.FC = () => {
             Welcome back, {greetingName}
           </h1>
           <p className="text-sm text-muted max-w-xl">
-            Your Bayesian retention score is trending up. Reviewing 2 due concepts today will prevent an estimated 14% memory decay across Transformer architectures.
+            {hasMastery
+              ? `You have mastered ${metrics.masteredNodesCount} of ${metrics.totalConceptsCount} core concepts (${metrics.knowledgeHealth}%). Active recall and spaced reviews maintain your optimal retention.`
+              : 'Welcome to Synapse. Ground your mastery with cognitive science. Explore the interactive Knowledge Graph or start a practice drill to calibrate your Bayesian knowledge baseline.'}
           </p>
         </div>
 
@@ -122,68 +89,72 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. SIX METRIC CARDS GRID */}
+      {/* 2. SIX AUTHENTIC METRIC CARDS GRID */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {/* Metric 1 */}
+        {/* Metric 1: Real Knowledge Health */}
         <Card className="p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
             Knowledge Health
           </span>
-          <div className="text-2xl font-bold text-primary-text">92.4%</div>
+          <div className="text-2xl font-bold text-primary-text">{metrics.knowledgeHealth}%</div>
           <p className="text-[11px] text-success font-medium mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" /> +3.8% wk
+            <TrendingUp className="w-3 h-3" /> {hasMastery ? `+${metrics.knowledgeHealth}% active` : '0% baseline'}
           </p>
         </Card>
 
-        {/* Metric 2 */}
+        {/* Metric 2: Real Mastered Nodes */}
         <Card className="p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
             Mastered Nodes
           </span>
-          <div className="text-2xl font-bold text-primary-text">148</div>
+          <div className="text-2xl font-bold text-primary-text">
+            {metrics.masteredNodesCount} <span className="text-sm text-muted font-normal">/ {metrics.totalConceptsCount}</span>
+          </div>
           <p className="text-[11px] text-muted mt-1">Across 5 subjects</p>
         </Card>
 
-        {/* Metric 3 */}
+        {/* Metric 3: Real Study Streak */}
         <Card className="p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
             Study Streak
           </span>
           <div className="text-2xl font-bold text-primary-text flex items-center gap-1">
-            14 Days <Flame className="w-4 h-4 text-warning" />
+            {metrics.studyStreakDays} {metrics.studyStreakDays === 1 ? 'Day' : 'Days'} <Flame className="w-4 h-4 text-warning" />
           </div>
-          <p className="text-[11px] text-muted mt-1">Best: 28 days</p>
+          <p className="text-[11px] text-muted mt-1">Daily active recall</p>
         </Card>
 
-        {/* Metric 4 */}
+        {/* Metric 4: Real Retention Estimate */}
         <Card className="p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
             Retention Est.
           </span>
-          <div className="text-2xl font-bold text-primary-text">88.5%</div>
+          <div className="text-2xl font-bold text-primary-text">{metrics.retentionEstimate}%</div>
           <p className="text-[11px] text-primary font-medium mt-1">SM-2 Calibrated</p>
         </Card>
 
-        {/* Metric 5 */}
+        {/* Metric 5: Real Study Time */}
         <Card className="p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
             Study Time
           </span>
-          <div className="text-2xl font-bold text-primary-text">18.5 hrs</div>
-          <p className="text-[11px] text-muted mt-1">Goal: 20 hrs/wk</p>
+          <div className="text-2xl font-bold text-primary-text">{metrics.studyTimeHours} hrs</div>
+          <p className="text-[11px] text-muted mt-1">{metrics.studyTimeHours > 0 ? 'Recorded practice' : 'Start learning'}</p>
         </Card>
 
-        {/* Metric 6 */}
+        {/* Metric 6: Real Practice Accuracy */}
         <Card className="p-4">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
             Practice Accuracy
           </span>
-          <div className="text-2xl font-bold text-primary-text">84.2%</div>
-          <p className="text-[11px] text-success font-medium mt-1">Slip rate: 6.8%</p>
+          <div className="text-2xl font-bold text-primary-text">{metrics.practiceAccuracy}%</div>
+          <p className="text-[11px] text-success font-medium mt-1">
+            {hasMastery ? 'Empirical precision' : 'No drills taken'}
+          </p>
         </Card>
       </div>
 
-      {/* 3. INTERACTIVE RECHARTS SECTION */}
+      {/* 3. REAL RECHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Evolution Chart (2 cols) */}
         <Card className="lg:col-span-2">
@@ -198,7 +169,7 @@ export const DashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="h-72 w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={EVOLUTION_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={metrics.evolutionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="masteryGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#7667F5" stopOpacity={0.4} />
@@ -211,7 +182,7 @@ export const DashboardPage: React.FC = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="day" stroke="#94A3B8" fontSize={11} tickLine={false} />
-                <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} domain={[50, 100]} />
+                <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -255,7 +226,7 @@ export const DashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="h-72 w-full pt-2 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={SUBJECT_MASTERY_DATA} outerRadius="70%">
+              <RadarChart data={metrics.subjectRadarData} outerRadius="70%">
                 <PolarGrid stroke="#E2E8F0" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748B', fontSize: 10 }} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#CBD5E1" tick={false} />
@@ -283,17 +254,27 @@ export const DashboardPage: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-primary-text text-base">Grounded Cognitive Recommendation</h3>
-                <Badge variant="primary">High Priority</Badge>
+                <Badge variant={hasMastery ? 'primary' : 'secondary'}>
+                  {hasMastery ? 'High Priority' : 'Getting Started'}
+                </Badge>
               </div>
               <p className="text-xs text-muted leading-relaxed">
-                You recently mastered <strong className="text-primary-text">Self-Attention Mechanism (94%)</strong>. However, prerequisite validation indicates your retention on <strong className="text-primary-text">Singular Value Decomposition (SVD)</strong> has dipped to 58%. Reviewing SVD now will accelerate your comprehension of low-rank adaptation (LoRA) and multi-head projections.
+                {hasMastery ? (
+                  <>
+                    You have mastered <strong className="text-primary-text">{metrics.masteredNodesCount} of {metrics.totalConceptsCount} concepts ({metrics.knowledgeHealth}%)</strong>. To continue advancing, review the next unmastered topics in your learning queue to prevent memory decay.
+                  </>
+                ) : (
+                  <>
+                    Begin by exploring the foundational concepts in <strong className="text-primary-text">Linear Algebra Foundations</strong> and <strong className="text-primary-text">Gradient Descent</strong> on the interactive Knowledge Graph. Completing a concept course will automatically unlock dependent advanced nodes.
+                  </>
+                )}
               </p>
               <div className="pt-2 flex gap-3">
-                <Button variant="primary" size="sm" onClick={() => navigate('/flashcards')}>
-                  Review SVD Flashcards (6 Cards)
+                <Button variant="primary" size="sm" onClick={() => navigate('/graph')}>
+                  Explore Knowledge Graph
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/graph')}>
-                  View Prerequisite Node
+                <Button variant="outline" size="sm" onClick={() => navigate('/practice')}>
+                  Take Practice Drill
                 </Button>
               </div>
             </div>
@@ -322,7 +303,9 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted">Master Transformer Attention and pass ML qualifying exam</p>
+              <p className="text-xs text-muted">
+                No active learning goals configured. Set your target milestones in your profile.
+              </p>
             )}
           </div>
           <Link to="/profile" className="text-xs text-primary font-semibold hover:underline pt-4 flex items-center gap-1">
@@ -331,31 +314,33 @@ export const DashboardPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* 5. CONTINUE LEARNING QUEUE */}
+      {/* 5. AUTHENTIC CONTINUE LEARNING QUEUE */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
             <CardTitle className="text-base font-bold">Continue Learning Queue</CardTitle>
             <CardDescription className="text-xs">
-              Prioritized according to Bayesian knowledge decay and upcoming spaced repetition deadlines.
+              Prioritized according to real concept completion and spaced repetition schedules.
             </CardDescription>
           </div>
-          <Link to="/practice">
+          <Link to="/graph">
             <Button variant="outline" size="sm">
-              View All Due Items
+              View Knowledge Graph
             </Button>
           </Link>
         </CardHeader>
 
         <div className="divide-y divide-muted-border/50">
-          {CONTINUE_LEARNING_ITEMS.map((item) => (
+          {metrics.continueLearningItems.map((item) => (
             <div
               key={item.id}
               className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface-secondary/40 px-2 rounded-xl transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-surface-secondary flex items-center justify-center text-primary flex-shrink-0">
-                  <BookOpen className="w-4 h-4" />
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  item.isCompleted ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-secondary text-primary'
+                }`}>
+                  {item.isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-primary-text">{item.title}</h4>
@@ -374,23 +359,17 @@ export const DashboardPage: React.FC = () => {
                 </div>
 
                 <Badge
-                  variant={
-                    item.urgencyColor === 'warning'
-                      ? 'warning'
-                      : item.urgencyColor === 'error'
-                      ? 'error'
-                      : 'primary'
-                  }
+                  variant={item.isCompleted ? 'success' : 'primary'}
                 >
-                  {item.urgency}
+                  {item.isCompleted ? 'Completed' : 'Not Completed'}
                 </Badge>
 
                 <Button
-                  variant="secondary"
+                  variant={item.isCompleted ? 'outline' : 'primary'}
                   size="sm"
-                  onClick={() => navigate(item.type.includes('Flashcard') ? '/flashcards' : '/practice')}
+                  onClick={() => navigate(`/course/${item.id}`)}
                 >
-                  Practice
+                  {item.isCompleted ? 'Review Course' : 'Start Course'}
                 </Button>
               </div>
             </div>

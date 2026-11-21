@@ -176,7 +176,11 @@ async def list_projects(
     current_user: AuthenticatedUser = Depends(get_current_user),
 ):
     """Retrieves all project workspaces for the authenticated user."""
-    results = [_format_project(p) for p in _LOCAL_PROJECTS_DB]
+    results = [
+        _format_project(p)
+        for p in _LOCAL_PROJECTS_DB
+        if not p.get("user_id") or str(p["user_id"]) == str(current_user.id)
+    ]
     return APIResponse(data=results, message=f"Retrieved {len(results)} project workspaces")
 
 
@@ -196,6 +200,7 @@ async def create_project(
 
     record = {
         "id": new_id,
+        "user_id": str(current_user.id),
         "title": payload.title,
         "description": payload.description,
         "subject_id": payload.subject_id,
@@ -223,6 +228,8 @@ async def get_project(
     p = next((proj for proj in _LOCAL_PROJECTS_DB if proj["id"] == project_id), None)
     if not p:
         raise HTTPException(status_code=404, detail="Project workspace not found")
+    if p.get("user_id") and str(p["user_id"]) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden: You cannot access another user's project")
     return APIResponse(data=_format_project(p), message="Project workspace retrieved")
 
 
@@ -237,6 +244,8 @@ async def toggle_project_milestone(
     p = next((proj for proj in _LOCAL_PROJECTS_DB if proj["id"] == project_id), None)
     if not p:
         raise HTTPException(status_code=404, detail="Project workspace not found")
+    if p.get("user_id") and str(p["user_id"]) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden: You cannot modify another user's project")
 
     m = next((ms for ms in p.get("milestones", []) if ms["id"] == milestone_id), None)
     if not m:
@@ -258,6 +267,8 @@ async def delete_project(
     existing = next((proj for proj in _LOCAL_PROJECTS_DB if proj["id"] == project_id), None)
     if not existing:
         raise HTTPException(status_code=404, detail="Project workspace not found")
+    if existing.get("user_id") and str(existing["user_id"]) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Forbidden: You cannot delete another user's project")
 
     _LOCAL_PROJECTS_DB = [proj for proj in _LOCAL_PROJECTS_DB if proj["id"] != project_id]
-    return APIResponse(data={"deleted_id": project_id}, message="Project workspace deleted")
+    return APIResponse(data={"deleted_id": project_id}, message="Project workspace removed")

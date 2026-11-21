@@ -175,7 +175,7 @@ export const OnboardingWizard: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <Input
                   label="Display Name"
-                  placeholder="e.g. Alex Chen"
+                  placeholder="e.g. Ganeshkumar"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />

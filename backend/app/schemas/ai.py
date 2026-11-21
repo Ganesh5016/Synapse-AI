@@ -88,6 +88,7 @@ class RAGQueryRequest(BaseModel):
     similarity_threshold: float = Field(default=0.35, ge=0.1, le=0.9)
     strictly_grounded: bool = Field(default=True, description="Enforce strict answers based only on corpus")
     subject_id: Optional[str] = None
+    history: Optional[List[Any]] = Field(default_factory=list, description="Optional conversational history context")
 
 
 class RAGQueryResponse(BaseModel):

@@ -36,32 +36,37 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-
-const DEFAULT_TRAJECTORY = [
-  { day: 'Mon', mastery: 68, retention: 80, cognitive_load: 45, questions: 22, minutes: 45 },
-  { day: 'Tue', mastery: 71, retention: 81, cognitive_load: 60, questions: 35, minutes: 65 },
-  { day: 'Wed', mastery: 73, retention: 83, cognitive_load: 38, questions: 18, minutes: 40 },
-  { day: 'Thu', mastery: 76, retention: 82, cognitive_load: 72, questions: 42, minutes: 80 },
-  { day: 'Fri', mastery: 80, retention: 86, cognitive_load: 50, questions: 30, minutes: 55 },
-  { day: 'Sat', mastery: 85, retention: 88, cognitive_load: 65, questions: 48, minutes: 90 },
-  { day: 'Sun', mastery: 89, retention: 91, cognitive_load: 40, questions: 25, minutes: 50 },
-];
-
-const DEFAULT_RADAR = [
-  { subject: 'Machine Learning & AI', score: 92, fullMark: 100 },
-  { subject: 'Math & Linear Algebra', score: 68, fullMark: 100 },
-  { subject: 'Systems & OS', score: 74, fullMark: 100 },
-  { subject: 'Algorithms & Data Structures', score: 85, fullMark: 100 },
-  { subject: 'Cognitive Science & BKT', score: 94, fullMark: 100 },
-];
+import { useAuth } from '../../hooks/useAuth';
+import { getRealDashboardMetrics } from '../../services/userProgress';
 
 export const MasteryAnalyticsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [trajectory, setTrajectory] = useState(DEFAULT_TRAJECTORY);
-  const [radarData, setRadarData] = useState(DEFAULT_RADAR);
+  const { user } = useAuth();
+  const [realMetrics, setRealMetrics] = useState(() => getRealDashboardMetrics(user?.id));
+  const [trajectory, setTrajectory] = useState(() => 
+    realMetrics.evolutionData.map(d => ({ ...d, cognitive_load: 0, minutes: Math.round(d.questions * 2.5) }))
+  );
+  const [radarData, setRadarData] = useState(() => realMetrics.subjectRadarData);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
+
+  useEffect(() => {
+    const rm = getRealDashboardMetrics(user?.id);
+    setRealMetrics(rm);
+    setTrajectory(rm.evolutionData.map(d => ({ ...d, cognitive_load: 0, minutes: Math.round(d.questions * 2.5) })));
+    setRadarData(rm.subjectRadarData);
+
+    const handleUpdate = () => {
+      const updated = getRealDashboardMetrics(user?.id);
+      setRealMetrics(updated);
+      setTrajectory(updated.evolutionData.map(d => ({ ...d, cognitive_load: 0, minutes: Math.round(d.questions * 2.5) })));
+      setRadarData(updated.subjectRadarData);
+    };
+
+    window.addEventListener('synapse_progress_updated', handleUpdate);
+    return () => window.removeEventListener('synapse_progress_updated', handleUpdate);
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -191,9 +196,9 @@ export const MasteryAnalyticsPage: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white/80 backdrop-blur-md border border-neutral-200/80 rounded-2xl p-4 shadow-xs">
             <span className="text-xs text-secondary-text block">Weekly Study Time</span>
-            <div className="text-2xl font-bold text-primary-text mt-0.5">7.1 hrs</div>
+            <div className="text-2xl font-bold text-primary-text mt-0.5">{realMetrics.studyTimeHours} hrs</div>
             <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> +1.2 hrs vs last week
+              <TrendingUp className="w-3 h-3" /> {realMetrics.studyTimeHours > 0 ? 'Active progress' : '0 hrs logged'}
             </p>
           </div>
 
@@ -201,20 +206,26 @@ export const MasteryAnalyticsPage: React.FC = () => {
             <span className="text-xs text-secondary-text flex items-center gap-1">
               <Flame className="w-3 h-3 text-amber-500" /> Study Streak
             </span>
-            <div className="text-2xl font-bold text-primary-text mt-0.5">14 Days</div>
+            <div className="text-2xl font-bold text-primary-text mt-0.5">
+              {realMetrics.studyStreakDays} {realMetrics.studyStreakDays === 1 ? 'Day' : 'Days'}
+            </div>
             <p className="text-[11px] text-secondary-text mt-1">Consistent active recall</p>
           </div>
 
           <div className="bg-white/80 backdrop-blur-md border border-neutral-200/80 rounded-2xl p-4 shadow-xs">
             <span className="text-xs text-secondary-text block">Retention Average</span>
-            <div className="text-2xl font-bold text-emerald-600 mt-0.5">89.2%</div>
+            <div className="text-2xl font-bold text-emerald-600 mt-0.5">{realMetrics.retentionEstimate}%</div>
             <p className="text-[11px] text-indigo-600 font-medium mt-1">SM-2 Calibrated</p>
           </div>
 
           <div className="bg-white/80 backdrop-blur-md border border-neutral-200/80 rounded-2xl p-4 shadow-xs">
             <span className="text-xs text-secondary-text block">Latent BKT Posterior</span>
-            <div className="text-2xl font-bold text-primary mt-0.5">0.814</div>
-            <p className="text-[11px] text-emerald-600 font-medium mt-1">P(Know) Mastered tier</p>
+            <div className="text-2xl font-bold text-primary mt-0.5">
+              {(realMetrics.knowledgeHealth / 100).toFixed(3)}
+            </div>
+            <p className="text-[11px] text-emerald-600 font-medium mt-1">
+              {realMetrics.masteredNodesCount > 0 ? 'Mastered tier' : 'Baseline tier'}
+            </p>
           </div>
         </div>
 
@@ -247,7 +258,7 @@ export const MasteryAnalyticsPage: React.FC = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                  <YAxis domain={[50, 100]} axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'rgba(255, 255, 255, 0.95)',

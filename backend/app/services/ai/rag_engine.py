@@ -101,8 +101,11 @@ class GroundedRAGEngine:
         q_words = set(re.findall(r"\w{3,}", query.lower()))
         doc_map = {str(d["id"]): d for d in _LOCAL_DOCS_DB}
 
-        # 1. Search document chunks
-        user_chunks = [c for c in _LOCAL_CHUNKS_DB if str(c.get("user_id")) == str(user_id)]
+        # 1. Search document chunks (user's uploaded documents + shared course literature)
+        user_chunks = [
+            c for c in _LOCAL_CHUNKS_DB
+            if str(c.get("user_id")) in (str(user_id), "demo-user-1234-5678-90ab", "shared")
+        ]
         for chunk in user_chunks:
             doc = doc_map.get(str(chunk.get("document_id")), {})
             if subject_id and str(doc.get("subject_id")) != str(subject_id):

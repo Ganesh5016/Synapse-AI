@@ -30,16 +30,20 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
+  Check,
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { useAuth } from '../../hooks/useAuth';
+import { getUserLearningState, toggleConceptCompletion } from '../../services/userProgress';
 
 // ============================================================================
 // Custom Glassmorphic Graph Node
 // ============================================================================
 
 interface ConceptNodeData {
+  id?: string;
   label: string;
   slug: string;
   subject_id: string;
@@ -47,6 +51,7 @@ interface ConceptNodeData {
   difficulty_level: string;
   mastery_score: number;
   mastery_level: string;
+  isCompleted?: boolean;
   prerequisites: string[];
   question_count: number;
   note_count: number;
@@ -57,35 +62,52 @@ const CustomConceptNode: React.FC<NodeProps> = ({ data, selected }) => {
   const nodeData = data as unknown as ConceptNodeData;
 
   const masteryStyles = {
-    Mastered: {
-      badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    Completed: {
+      badge: 'bg-emerald-100 text-emerald-800 border-emerald-400 font-bold',
       dot: 'bg-emerald-500',
-      border: 'border-emerald-400/60',
+      border: 'border-emerald-500/80 ring-1 ring-emerald-500/40',
+      barColor: 'bg-emerald-500',
+    },
+    Mastered: {
+      badge: 'bg-emerald-100 text-emerald-800 border-emerald-400 font-bold',
+      dot: 'bg-emerald-500',
+      border: 'border-emerald-500/80 ring-1 ring-emerald-500/40',
+      barColor: 'bg-emerald-500',
     },
     Proficient: {
       badge: 'bg-blue-100 text-blue-800 border-blue-300',
       dot: 'bg-blue-500',
       border: 'border-blue-400/60',
+      barColor: 'bg-blue-500',
     },
     Developing: {
       badge: 'bg-amber-100 text-amber-800 border-amber-300',
       dot: 'bg-amber-500',
       border: 'border-amber-400/60',
+      barColor: 'bg-amber-500',
+    },
+    'Not Completed': {
+      badge: 'bg-slate-100 text-slate-700 border-slate-300',
+      dot: 'bg-slate-400',
+      border: 'border-slate-300/80',
+      barColor: 'bg-slate-300',
     },
     Novice: {
-      badge: 'bg-slate-100 text-slate-800 border-slate-300',
+      badge: 'bg-slate-100 text-slate-700 border-slate-300',
       dot: 'bg-slate-400',
-      border: 'border-slate-300',
+      border: 'border-slate-300/80',
+      barColor: 'bg-slate-300',
     },
   }[nodeData.mastery_level] || {
-    badge: 'bg-slate-100 text-slate-800 border-slate-300',
+    badge: 'bg-slate-100 text-slate-700 border-slate-300',
     dot: 'bg-slate-400',
-    border: 'border-slate-300',
+    border: 'border-slate-300/80',
+    barColor: 'bg-slate-300',
   };
 
   return (
     <div
-      className={`min-w-[220px] max-w-[260px] p-3 rounded-2xl bg-white/90 backdrop-blur-md border transition-all duration-200 text-left cursor-pointer shadow-xs hover:shadow-md ${
+      className={`min-w-[220px] max-w-[260px] p-3 rounded-2xl bg-white/95 backdrop-blur-md border transition-all duration-200 text-left cursor-pointer shadow-xs hover:shadow-md ${
         selected
           ? 'ring-2 ring-primary ring-offset-2 border-primary shadow-md scale-[1.02]'
           : masteryStyles.border
@@ -99,7 +121,11 @@ const CustomConceptNode: React.FC<NodeProps> = ({ data, selected }) => {
           {nodeData.subject_name}
         </span>
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${masteryStyles.badge}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${masteryStyles.dot}`} />
+          {nodeData.isCompleted ? (
+            <Check className="w-2.5 h-2.5 text-emerald-600 stroke-[3]" />
+          ) : (
+            <span className={`w-1.5 h-1.5 rounded-full ${masteryStyles.dot}`} />
+          )}
           {nodeData.mastery_level}
         </span>
       </div>
@@ -112,14 +138,16 @@ const CustomConceptNode: React.FC<NodeProps> = ({ data, selected }) => {
       {/* Progress bar */}
       <div className="w-full bg-surface-secondary rounded-full h-1.5 mb-2 overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-500 bg-primary"
+          className={`h-full rounded-full transition-all duration-500 ${masteryStyles.barColor}`}
           style={{ width: `${Math.round(nodeData.mastery_score * 100)}%` }}
         />
       </div>
 
       {/* Footer stats */}
       <div className="flex items-center justify-between text-[10px] text-muted pt-1 border-t border-muted-border/40">
-        <span>{Math.round(nodeData.mastery_score * 100)}% Mastery</span>
+        <span className="font-semibold text-primary-text">
+          {nodeData.isCompleted ? '100% Completed' : `${Math.round(nodeData.mastery_score * 100)}% Mastery`}
+        </span>
         <span className="capitalize">{nodeData.difficulty_level}</span>
       </div>
 
@@ -134,153 +162,153 @@ const CustomConceptNode: React.FC<NodeProps> = ({ data, selected }) => {
 
 export const KnowledgeGraphPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const nodeTypes = useMemo(() => ({ conceptNode: CustomConceptNode }), []);
+
+  // Real Learning State from user progress
+  const [learningState, setLearningState] = useState(() => getUserLearningState(user?.id));
+
+  useEffect(() => {
+    setLearningState(getUserLearningState(user?.id));
+    const handleUpdate = () => {
+      setLearningState(getUserLearningState(user?.id));
+    };
+    window.addEventListener('synapse_progress_updated', handleUpdate);
+    return () => window.removeEventListener('synapse_progress_updated', handleUpdate);
+  }, [user]);
 
   // Filter state
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedNodeData, setSelectedNodeData] = useState<ConceptNodeData | null>(null);
 
-  // Initial Graph Data
-  const initialNodes = [
+  // Static Graph Layout Structure
+  const rawNodesConfig = useMemo(() => [
     {
       id: 'c0000000-0000-0000-0000-000000000001',
-      type: 'conceptNode',
       position: { x: 50, y: 150 },
-      data: {
-        label: 'Linear Algebra Foundations',
-        slug: 'linear-algebra-foundations',
-        subject_id: 'a0000000-0000-0000-0000-000000000003',
-        subject_name: 'Mathematics & Stats',
-        difficulty_level: 'beginner',
-        mastery_score: 0.92,
-        mastery_level: 'Mastered',
-        prerequisites: [],
-        question_count: 5,
-        note_count: 3,
-      },
+      label: 'Linear Algebra Foundations',
+      slug: 'linear-algebra-foundations',
+      subject_id: 'a0000000-0000-0000-0000-000000000003',
+      subject_name: 'Mathematics & Stats',
+      difficulty_level: 'beginner',
+      prerequisites: [],
+      question_count: 5,
+      note_count: 3,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000002',
-      type: 'conceptNode',
       position: { x: 340, y: 80 },
-      data: {
-        label: 'Gradient Descent & Backpropagation',
-        slug: 'gradient-descent-backprop',
-        subject_id: 'a0000000-0000-0000-0000-000000000001',
-        subject_name: 'Machine Learning',
-        difficulty_level: 'beginner',
-        mastery_score: 0.84,
-        mastery_level: 'Proficient',
-        prerequisites: ['Linear Algebra Foundations'],
-        question_count: 6,
-        note_count: 2,
-      },
+      label: 'Gradient Descent & Backpropagation',
+      slug: 'gradient-descent-backprop',
+      subject_id: 'a0000000-0000-0000-0000-000000000001',
+      subject_name: 'Machine Learning',
+      difficulty_level: 'beginner',
+      prerequisites: ['Linear Algebra Foundations'],
+      question_count: 6,
+      note_count: 2,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000003',
-      type: 'conceptNode',
       position: { x: 640, y: 100 },
-      data: {
-        label: 'Scaled Dot-Product Attention',
-        slug: 'scaled-dot-product-attention',
-        subject_id: 'a0000000-0000-0000-0000-000000000001',
-        subject_name: 'Machine Learning',
-        difficulty_level: 'intermediate',
-        mastery_score: 0.78,
-        mastery_level: 'Proficient',
-        prerequisites: ['Linear Algebra Foundations', 'Gradient Descent & Backpropagation'],
-        question_count: 6,
-        note_count: 4,
-      },
+      label: 'Scaled Dot-Product Attention',
+      slug: 'scaled-dot-product-attention',
+      subject_id: 'a0000000-0000-0000-0000-000000000001',
+      subject_name: 'Machine Learning',
+      difficulty_level: 'intermediate',
+      prerequisites: ['Linear Algebra Foundations', 'Gradient Descent & Backpropagation'],
+      question_count: 6,
+      note_count: 4,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000004',
-      type: 'conceptNode',
       position: { x: 940, y: 100 },
-      data: {
-        label: 'Multi-Head Attention',
-        slug: 'multi-head-attention',
-        subject_id: 'a0000000-0000-0000-0000-000000000001',
-        subject_name: 'Machine Learning',
-        difficulty_level: 'intermediate',
-        mastery_score: 0.65,
-        mastery_level: 'Developing',
-        prerequisites: ['Scaled Dot-Product Attention'],
-        question_count: 4,
-        note_count: 2,
-      },
+      label: 'Multi-Head Attention',
+      slug: 'multi-head-attention',
+      subject_id: 'a0000000-0000-0000-0000-000000000001',
+      subject_name: 'Machine Learning',
+      difficulty_level: 'intermediate',
+      prerequisites: ['Scaled Dot-Product Attention'],
+      question_count: 4,
+      note_count: 2,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000005',
-      type: 'conceptNode',
       position: { x: 1240, y: 120 },
-      data: {
-        label: 'Transformer Architecture & Self-Attention',
-        slug: 'transformer-architecture',
-        subject_id: 'a0000000-0000-0000-0000-000000000001',
-        subject_name: 'Machine Learning',
-        difficulty_level: 'advanced',
-        mastery_score: 0.52,
-        mastery_level: 'Developing',
-        prerequisites: ['Multi-Head Attention'],
-        question_count: 4,
-        note_count: 3,
-      },
+      label: 'Transformer Architecture & Self-Attention',
+      slug: 'transformer-architecture',
+      subject_id: 'a0000000-0000-0000-0000-000000000001',
+      subject_name: 'Machine Learning',
+      difficulty_level: 'advanced',
+      prerequisites: ['Multi-Head Attention'],
+      question_count: 4,
+      note_count: 3,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000006',
-      type: 'conceptNode',
       position: { x: 340, y: 320 },
-      data: {
-        label: 'Bayesian Probability & Posterior Updates',
-        slug: 'bayesian-probability-posterior',
-        subject_id: 'a0000000-0000-0000-0000-000000000003',
-        subject_name: 'Mathematics & Stats',
-        difficulty_level: 'beginner',
-        mastery_score: 0.88,
-        mastery_level: 'Proficient',
-        prerequisites: [],
-        question_count: 5,
-        note_count: 2,
-      },
+      label: 'Bayesian Probability & Posterior Updates',
+      slug: 'bayesian-probability-posterior',
+      subject_id: 'a0000000-0000-0000-0000-000000000003',
+      subject_name: 'Mathematics & Stats',
+      difficulty_level: 'beginner',
+      prerequisites: [],
+      question_count: 5,
+      note_count: 2,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000007',
-      type: 'conceptNode',
       position: { x: 660, y: 320 },
-      data: {
-        label: 'Bayesian Knowledge Tracing (BKT)',
-        slug: 'bayesian-knowledge-tracing',
-        subject_id: 'a0000000-0000-0000-0000-000000000005',
-        subject_name: 'Cognitive Science',
-        difficulty_level: 'intermediate',
-        mastery_score: 0.58,
-        mastery_level: 'Developing',
-        prerequisites: ['Bayesian Probability & Posterior Updates'],
-        question_count: 4,
-        note_count: 3,
-      },
+      label: 'Bayesian Knowledge Tracing (BKT)',
+      slug: 'bayesian-knowledge-tracing',
+      subject_id: 'a0000000-0000-0000-0000-000000000005',
+      subject_name: 'Cognitive Science',
+      difficulty_level: 'intermediate',
+      prerequisites: ['Bayesian Probability & Posterior Updates'],
+      question_count: 4,
+      note_count: 3,
     },
     {
       id: 'c0000000-0000-0000-0000-000000000008',
-      type: 'conceptNode',
       position: { x: 960, y: 320 },
-      data: {
-        label: 'SuperMemo SM-2 Spaced Repetition',
-        slug: 'sm-2-spaced-repetition',
-        subject_id: 'a0000000-0000-0000-0000-000000000005',
-        subject_name: 'Cognitive Science',
-        difficulty_level: 'intermediate',
-        mastery_score: 0.38,
-        mastery_level: 'Novice',
-        prerequisites: ['Bayesian Knowledge Tracing (BKT)'],
-        question_count: 4,
-        note_count: 2,
-      },
+      label: 'SuperMemo SM-2 Spaced Repetition',
+      slug: 'sm-2-spaced-repetition',
+      subject_id: 'a0000000-0000-0000-0000-000000000005',
+      subject_name: 'Cognitive Science',
+      difficulty_level: 'intermediate',
+      prerequisites: ['Bayesian Knowledge Tracing (BKT)'],
+      question_count: 4,
+      note_count: 2,
     },
-  ];
+  ], []);
+
+  // Compute live nodes reflecting authentic user completion state (not default data!)
+  const liveNodes = useMemo(() => {
+    return rawNodesConfig.map((item) => {
+      const isDone = Boolean(learningState.completedConcepts[item.id]?.isCompleted);
+      const mastery = isDone ? (learningState.completedConcepts[item.id]?.masteryScore || 1.0) : 0.0;
+      return {
+        id: item.id,
+        type: 'conceptNode',
+        position: item.position,
+        data: {
+          id: item.id,
+          label: item.label,
+          slug: item.slug,
+          subject_id: item.subject_id,
+          subject_name: item.subject_name,
+          difficulty_level: item.difficulty_level,
+          mastery_score: mastery,
+          mastery_level: isDone ? 'Completed' : 'Not Completed',
+          isCompleted: isDone,
+          prerequisites: item.prerequisites,
+          question_count: item.question_count,
+          note_count: item.note_count,
+        },
+      };
+    });
+  }, [rawNodesConfig, learningState]);
 
   const initialEdges = [
     {
@@ -341,12 +369,12 @@ export const KnowledgeGraphPage: React.FC = () => {
     },
   ];
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(liveNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Filter nodes based on subject & search
+  // Sync nodes whenever liveNodes changes
   useEffect(() => {
-    let filtered = initialNodes;
+    let filtered = liveNodes;
     if (selectedSubject !== 'all') {
       filtered = filtered.filter((n) => n.data.subject_id === selectedSubject);
     }
@@ -355,7 +383,21 @@ export const KnowledgeGraphPage: React.FC = () => {
       filtered = filtered.filter((n) => n.data.label.toLowerCase().includes(q));
     }
     setNodes(filtered);
-  }, [selectedSubject, searchQuery]);
+  }, [liveNodes, selectedSubject, searchQuery, setNodes]);
+
+  const handleToggleNodeCompletion = (conceptId: string) => {
+    const isNowDone = toggleConceptCompletion(user?.id, conceptId);
+    const updated = getUserLearningState(user?.id);
+    setLearningState(updated);
+    if (selectedNodeData) {
+      setSelectedNodeData(prev => prev ? {
+        ...prev,
+        isCompleted: isNowDone,
+        mastery_score: isNowDone ? 1.0 : 0.0,
+        mastery_level: isNowDone ? 'Completed' : 'Not Completed',
+      } : null);
+    }
+  };
 
   const onNodeClick = useCallback((_: any, node: any) => {
     setSelectedNodeData(node.data as ConceptNodeData);
@@ -517,11 +559,25 @@ export const KnowledgeGraphPage: React.FC = () => {
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => navigate(`/practice?conceptId=${selectedNodeData.slug}`)}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white shadow-xs"
+                onClick={() => navigate(`/course/${selectedNodeData.id || selectedNodeData.slug}`)}
+                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white shadow-xs font-bold"
               >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Start Practice Quiz</span>
+                <BookOpen className="w-4 h-4" />
+                <span>{selectedNodeData.isCompleted ? 'Review Course Lesson & Test' : 'Start Course & Assessment'}</span>
+              </Button>
+
+              <Button
+                variant={selectedNodeData.isCompleted ? "outline" : "secondary"}
+                size="sm"
+                onClick={() => handleToggleNodeCompletion(selectedNodeData.id || selectedNodeData.slug)}
+                className={`w-full flex items-center justify-center gap-2 text-xs ${
+                  selectedNodeData.isCompleted 
+                    ? 'border-emerald-300 text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100' 
+                    : 'bg-surface-secondary hover:bg-surface text-secondary-text border border-muted-border'
+                }`}
+              >
+                <CheckCircle2 className={`w-3.5 h-3.5 ${selectedNodeData.isCompleted ? 'text-emerald-600' : 'text-muted'}`} />
+                <span>{selectedNodeData.isCompleted ? '✓ Completed (Click to Reset)' : 'Quick Toggle Status'}</span>
               </Button>
 
               <Button

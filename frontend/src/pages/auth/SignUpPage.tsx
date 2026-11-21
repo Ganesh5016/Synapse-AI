@@ -44,7 +44,12 @@ export const SignUpPage: React.FC = () => {
     setIsLoading(false);
 
     if (error) {
-      setAuthError(error.message || 'Registration failed. Please check your credentials.');
+      const msg = error.message || '';
+      if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network') || msg.includes('521') || msg.includes('503')) {
+        setAuthError('Supabase project is paused or sleeping. Please unpause/restore it in your Supabase Dashboard, or click "Try Instant Interactive Demo" below.');
+      } else {
+        setAuthError(msg || 'Registration failed. Please check your credentials.');
+      }
     } else if (user) {
       // If user is returned immediately (or auto-confirmed), route to onboarding wizard
       navigate('/onboarding');
@@ -101,7 +106,7 @@ export const SignUpPage: React.FC = () => {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <Input
                   label="Full Name"
-                  placeholder="Alex Chen"
+                  placeholder="e.g. Ganeshkumar"
                   error={errors.displayName?.message}
                   {...register('displayName')}
                 />
@@ -109,7 +114,7 @@ export const SignUpPage: React.FC = () => {
                 <Input
                   label="Email Address"
                   type="email"
-                  placeholder="alex@university.edu"
+                  placeholder="name@example.com"
                   autoComplete="email"
                   error={errors.email?.message}
                   {...register('email')}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Layers,
@@ -13,100 +13,85 @@ import {
   Clock,
   Play,
   Lightbulb,
+  AlertTriangle,
+  ChevronRight,
+  Filter,
 } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { useAuth } from '../../hooks/useAuth';
+import { recordPracticeAttempt, ALL_CONCEPTS, getUserLearningState } from '../../services/userProgress';
+import { COURSE_CURRICULUM, getCourseData } from '../../services/courseContent';
 
 interface PracticeQuestion {
   id: string;
   concept_id: string;
   concept_name: string;
   subject_name: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer';
   prompt: string;
-  options?: string[];
+  options: string[];
   correct_answer: string;
   explanation: string;
   difficulty: string;
   hint?: string;
 }
 
+// Convert all curriculum questions into a unified, rich question bank
+const ALL_PRACTICE_QUESTIONS: PracticeQuestion[] = Object.values(COURSE_CURRICULUM).flatMap(
+  (course) =>
+    course.questions.map((q) => ({
+      id: q.id,
+      concept_id: course.id,
+      concept_name: course.title,
+      subject_name: course.subject,
+      prompt: q.prompt,
+      options: q.options,
+      correct_answer: q.correctAnswer,
+      explanation: q.explanation,
+      difficulty: course.difficulty,
+      hint: q.hint,
+    }))
+);
+
 export const PracticeCenterPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const conceptFilter = searchParams.get('conceptId');
+  const { user } = useAuth();
 
-  const questions: PracticeQuestion[] = [
-    {
-      id: 'q-001',
-      concept_id: 'c0000000-0000-0000-0000-000000000003',
-      concept_name: 'Scaled Dot-Product Attention',
-      subject_name: 'Machine Learning & AI',
-      question_type: 'multiple_choice',
-      prompt: 'Why is the dot-product inner matrix QK^T scaled by 1/sqrt(d_k) in Transformer self-attention?',
-      options: [
-        'To prevent dot products from pushing softmax into vanishingly small gradient regions',
-        'To reduce computational complexity from quadratic to linear time',
-        'To normalize the positional encodings across variable sequence lengths',
-        'To enforce strict orthogonality between Query and Value projections',
-      ],
-      correct_answer: 'To prevent dot products from pushing softmax into vanishingly small gradient regions',
-      explanation:
-        'When projection dimension d_k is large, the dot products grow large in magnitude, driving the softmax function into saturated regions where gradients approach zero. Dividing by sqrt(d_k) scales the dot-product variance to 1.',
-      difficulty: 'intermediate',
-      hint: 'Consider what happens to the slope/derivative of the softmax function when inputs become extremely large.',
-    },
-    {
-      id: 'q-002',
-      concept_id: 'c0000000-0000-0000-0000-000000000007',
-      concept_name: 'Bayesian Knowledge Tracing (BKT)',
-      subject_name: 'Cognitive Science & Psychology',
-      question_type: 'multiple_choice',
-      prompt: 'In standard Bayesian Knowledge Tracing (BKT), which parameter denotes the probability of answering correctly without having mastered the latent skill?',
-      options: [
-        'Guess parameter P(G)',
-        'Slip parameter P(S)',
-        'Transit parameter P(T)',
-        'Prior parameter P(L0)',
-      ],
-      correct_answer: 'Guess parameter P(G)',
-      explanation:
-        'P(G) represents the probability that a student gets an item correct by guessing, despite not possessing the latent mastery. P(S) represents slipping on a mastered skill.',
-      difficulty: 'beginner',
-      hint: 'This accounts for lucky guessing on multiple-choice assessments.',
-    },
-    {
-      id: 'q-003',
-      concept_id: 'c0000000-0000-0000-0000-000000000008',
-      concept_name: 'SuperMemo SM-2 Spaced Repetition',
-      subject_name: 'Cognitive Science & Psychology',
-      question_type: 'multiple_choice',
-      prompt: 'What is the minimum lower bound enforced on the Easiness Factor (EF) in the SM-2 algorithm?',
-      options: ['1.3', '1.0', '2.5', '0.5'],
-      correct_answer: '1.3',
-      explanation:
-        'In SM-2, EF is bounded from below at 1.3 to prevent intervals from permanently collapsing into infinite stagnation for difficult items.',
-      difficulty: 'intermediate',
-      hint: 'The standard formula clamps the multiplier so it never drops below this value greater than 1.0.',
-    },
-    {
-      id: 'q-004',
-      concept_id: 'c0000000-0000-0000-0000-000000000002',
-      concept_name: 'Gradient Descent & Backpropagation',
-      subject_name: 'Machine Learning & AI',
-      question_type: 'true_false',
-      prompt: 'True or False: In stochastic gradient descent, setting an excessively high learning rate can cause the optimization trajectory to diverge and overshoot the minimum.',
-      options: ['True', 'False'],
-      correct_answer: 'True',
-      explanation:
-        'Large step sizes cause parameter updates to oscillate across steep ravines, failing to converge and potentially diverging to infinity.',
-      difficulty: 'beginner',
-      hint: 'Think about taking huge jumps on a steep loss surface.',
-    },
-  ];
+  const queryConcept = searchParams.get('conceptId');
+  const [selectedTopic, setSelectedTopic] = useState<string>(queryConcept || 'all');
+  const [sessionSeed, setSessionSeed] = useState<number>(0);
 
-  // Active question index
+  // Sync state if query param changes
+  useEffect(() => {
+    if (queryConcept) {
+      setSelectedTopic(queryConcept);
+    }
+  }, [queryConcept]);
+
+  // Compute active question set dynamically based on topic selection and session seed
+  const questions: PracticeQuestion[] = useMemo(() => {
+    if (selectedTopic && selectedTopic !== 'all') {
+      const matchCourse = getCourseData(selectedTopic);
+      const matched = ALL_PRACTICE_QUESTIONS.filter(
+        (q) =>
+          q.concept_id === selectedTopic ||
+          (matchCourse && q.concept_id === matchCourse.id) ||
+          q.concept_name.toLowerCase().includes(selectedTopic.toLowerCase())
+      );
+      if (matched.length > 0) return matched;
+    }
+
+    // Adaptive mix across all disciplines: pick 4 distinct questions based on session seed
+    const pool = [...ALL_PRACTICE_QUESTIONS];
+    // Deterministic pseudo-shuffle per session seed so it never repeats the same 4
+    const offset = (sessionSeed * 4) % pool.length;
+    const cycled = [...pool.slice(offset), ...pool.slice(0, offset)];
+    return cycled.slice(0, 4);
+  }, [selectedTopic, sessionSeed]);
+
+  // Active question index and session metrics
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
@@ -115,15 +100,16 @@ export const PracticeCenterPage: React.FC = () => {
   const [correctCount, setCorrectCount] = useState(0);
   const [bktDelta, setBktDelta] = useState<number | null>(null);
 
-  const currentQ = questions[currentIndex];
+  const currentQ = questions[currentIndex] || questions[0];
   const isLastQuestion = currentIndex === questions.length - 1;
   const isComplete = currentIndex >= questions.length;
 
   const handleSubmitAnswer = () => {
-    if (!selectedOption || isAnswerSubmitted) return;
+    if (!selectedOption || isAnswerSubmitted || !currentQ) return;
     setIsAnswerSubmitted(true);
 
-    const isCorrect = selectedOption.trim().toLowerCase() === currentQ.correct_answer.trim().toLowerCase();
+    const isCorrect =
+      selectedOption.trim().toLowerCase() === currentQ.correct_answer.trim().toLowerCase();
     if (isCorrect) {
       setSessionScore((prev) => prev + 100);
       setCorrectCount((prev) => prev + 1);
@@ -134,6 +120,16 @@ export const PracticeCenterPage: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
+    if (isLastQuestion) {
+      const finalCorrect = selectedOption?.trim().toLowerCase() === currentQ?.correct_answer.trim().toLowerCase()
+        ? correctCount + 1
+        : correctCount;
+
+      // Record authentic practice attempt in user progress service
+      if (currentQ) {
+        recordPracticeAttempt(user?.id, currentQ.concept_id, questions.length, finalCorrect);
+      }
+    }
     setSelectedOption(null);
     setShowHint(false);
     setIsAnswerSubmitted(false);
@@ -151,21 +147,66 @@ export const PracticeCenterPage: React.FC = () => {
     setBktDelta(null);
   };
 
+  const handleNextSession = () => {
+    // Advances seed to load a completely fresh set of questions!
+    setSessionSeed((prev) => prev + 1);
+    handleRestart();
+  };
+
+  const handleTopicChange = (newTopic: string) => {
+    setSelectedTopic(newTopic);
+    if (newTopic === 'all') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ conceptId: newTopic });
+    }
+    handleRestart();
+  };
+
   return (
     <div className="space-y-6 max-w-3xl mx-auto pb-12">
-      {/* 1. TOP PROGRESS BAR & STATS */}
-      {!isComplete && (
-        <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-border shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-              <Brain className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
-                {currentQ.subject_name}
-              </span>
-              <h4 className="text-xs font-bold text-primary-text">{currentQ.concept_name}</h4>
-            </div>
+      {/* 1. TOP TOPIC SELECTOR & CONTROL BAR */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-muted-border shadow-xs">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl gradient-accent text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+            <Brain className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base font-bold text-primary-text truncate">
+              Psychometric Practice Center
+            </h1>
+            <p className="text-[11px] text-muted truncate">
+              Dynamic BKT questions calibrated across your knowledge decay curves.
+            </p>
+          </div>
+        </div>
+
+        {/* Topic Filter Dropdown */}
+        <div className="flex items-center gap-2">
+          <Filter className="w-3.5 h-3.5 text-muted" />
+          <select
+            value={selectedTopic}
+            onChange={(e) => handleTopicChange(e.target.value)}
+            className="text-xs bg-surface-secondary border border-muted-border rounded-xl px-2.5 py-1.5 text-primary-text font-medium focus:outline-none focus:border-primary"
+          >
+            <option value="all">All Topics (Adaptive Mix)</option>
+            {ALL_CONCEPTS.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* 2. PROGRESS BAR & CURRENT QUESTION METRICS */}
+      {!isComplete && currentQ && (
+        <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-white/80 backdrop-blur-md border border-muted-border shadow-2xs">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
+              {currentQ.subject_name}
+            </span>
+            <h4 className="text-xs font-bold text-primary-text">{currentQ.concept_name}</h4>
           </div>
 
           <div className="flex items-center gap-3 text-xs">
@@ -179,14 +220,14 @@ export const PracticeCenterPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. QUESTION CARD */}
-      {!isComplete ? (
-        <Card className="p-6 sm:p-8 space-y-6 bg-white/90 backdrop-blur-md border border-border shadow-sm">
+      {/* 3. ACTIVE QUESTION CARD */}
+      {!isComplete && currentQ ? (
+        <Card className="p-6 sm:p-8 space-y-6 bg-white border border-muted-border shadow-sm">
           {/* Prompt */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Badge variant="outline" className="text-[10px] uppercase font-bold text-muted">
-                {currentQ.question_type.replace('_', ' ')}
+              <Badge variant="outline" className="text-[10px] uppercase font-bold text-primary border-primary/30">
+                Multiple Choice
               </Badge>
               <span className="text-[11px] text-muted capitalize font-medium">
                 {currentQ.difficulty} Difficulty
@@ -221,12 +262,14 @@ export const PracticeCenterPage: React.FC = () => {
           <div className="space-y-2.5">
             {currentQ.options?.map((opt, idx) => {
               const isSelected = selectedOption === opt;
-              const isCorrectOption = opt.trim().toLowerCase() === currentQ.correct_answer.trim().toLowerCase();
+              const isCorrectOption =
+                opt.trim().toLowerCase() === currentQ.correct_answer.trim().toLowerCase();
 
               let optStyle = 'bg-white border-muted-border hover:border-primary/40 text-primary-text';
               if (isAnswerSubmitted) {
                 if (isCorrectOption) {
-                  optStyle = 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium ring-1 ring-emerald-400';
+                  optStyle =
+                    'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium ring-1 ring-emerald-400';
                 } else if (isSelected && !isCorrectOption) {
                   optStyle = 'bg-rose-50 border-rose-300 text-rose-900 font-medium';
                 } else {
@@ -257,7 +300,7 @@ export const PracticeCenterPage: React.FC = () => {
 
           {/* Explanation Banner on Submit */}
           {isAnswerSubmitted && (
-            <div className="p-4 rounded-2xl bg-surface/80 border border-muted-border space-y-2 animate-in fade-in duration-200">
+            <div className="p-4 rounded-2xl bg-surface-secondary border border-muted-border space-y-2 animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-primary-text flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -269,7 +312,7 @@ export const PracticeCenterPage: React.FC = () => {
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted leading-relaxed">{currentQ.explanation}</p>
+              <p className="text-xs text-secondary-text leading-relaxed">{currentQ.explanation}</p>
             </div>
           )}
 
@@ -303,48 +346,102 @@ export const PracticeCenterPage: React.FC = () => {
           </div>
         </Card>
       ) : (
-        /* 3. SESSION COMPLETE RECAP */
-        <Card className="p-8 text-center space-y-6 bg-white/95 backdrop-blur-md border border-border shadow-md">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center mx-auto shadow-md">
-            <Trophy className="w-8 h-8 fill-current" />
-          </div>
+        /* 4. SESSION COMPLETE RECAP — PASS (COMPLETED) vs FAIL (RETAKE) */
+        (() => {
+          const accuracy = Math.round((correctCount / questions.length) * 100);
+          const isPassed = accuracy >= 75;
 
-          <div className="space-y-2">
-            <h2 className="text-2xl font-extrabold text-primary-text">Practice Drill Complete!</h2>
-            <p className="text-xs text-muted max-w-md mx-auto">
-              Your responses have been processed through the Bayesian Knowledge Tracing engine, updating latent skill probabilities.
-            </p>
-          </div>
+          return isPassed ? (
+            <Card className="p-8 text-center space-y-6 bg-white border border-emerald-300 shadow-md">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center mx-auto shadow-md">
+                <Trophy className="w-8 h-8 fill-current" />
+              </div>
 
-          <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
-            <div className="p-3 rounded-2xl bg-surface border border-muted-border">
-              <span className="text-[10px] font-bold text-muted uppercase block">Score</span>
-              <span className="text-xl font-extrabold text-primary">{sessionScore}</span>
-            </div>
-            <div className="p-3 rounded-2xl bg-surface border border-muted-border">
-              <span className="text-[10px] font-bold text-muted uppercase block">Accuracy</span>
-              <span className="text-xl font-extrabold text-success">
-                {Math.round((correctCount / questions.length) * 100)}%
-              </span>
-            </div>
-            <div className="p-3 rounded-2xl bg-surface border border-muted-border">
-              <span className="text-[10px] font-bold text-muted uppercase block">Mastery Gain</span>
-              <span className="text-xl font-extrabold text-accent">+8%</span>
-            </div>
-          </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-xs font-bold text-emerald-800">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Course Passed & Completed (100% Mastery)</span>
+                </div>
+                <h2 className="text-2xl font-extrabold text-primary-text">Assessment Passed!</h2>
+                <p className="text-xs text-muted max-w-md mx-auto">
+                  You scored <strong className="text-emerald-600 font-bold">{accuracy}%</strong> ({correctCount} of {questions.length} correct). This concept has been marked <strong className="text-emerald-700">Completed</strong> on your Knowledge Graph and Dashboard!
+                </p>
+              </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-            <Button variant="primary" size="md" onClick={() => navigate('/graph')}>
-              View Knowledge Graph
-            </Button>
-            <Button variant="outline" size="md" onClick={() => navigate('/flashcards')}>
-              Review Flashcards
-            </Button>
-            <Button variant="ghost" size="md" onClick={handleRestart}>
-              <RotateCcw className="w-4 h-4 mr-1.5" /> Practice Again
-            </Button>
-          </div>
-        </Card>
+              <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
+                <div className="p-3 rounded-2xl bg-surface-secondary border border-muted-border">
+                  <span className="text-[10px] font-bold text-muted uppercase block">Score</span>
+                  <span className="text-xl font-extrabold text-primary">{sessionScore}</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-surface-secondary border border-muted-border">
+                  <span className="text-[10px] font-bold text-muted uppercase block">Accuracy</span>
+                  <span className="text-xl font-extrabold text-emerald-600">{accuracy}%</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-surface-secondary border border-muted-border">
+                  <span className="text-[10px] font-bold text-muted uppercase block">Status</span>
+                  <span className="text-sm font-extrabold text-primary block mt-1">Completed</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-muted-border">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleNextSession}
+                  className="bg-primary hover:bg-primary-hover text-white flex items-center gap-2 shadow-xs"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Start Next Practice Session (New Questions)</span>
+                </Button>
+
+                <Button variant="outline" size="md" onClick={() => navigate('/graph')}>
+                  View Knowledge Graph
+                </Button>
+
+                <Button variant="ghost" size="md" onClick={() => navigate('/dashboard')}>
+                  Go to Dashboard
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Card className="p-8 text-center space-y-6 bg-white border border-rose-300 shadow-md">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center mx-auto shadow-md">
+                <AlertTriangle className="w-8 h-8 fill-current" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 border border-rose-300 text-xs font-bold text-rose-800">
+                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Not Completed — Passing Score is 75%</span>
+                </div>
+                <h2 className="text-2xl font-extrabold text-primary-text">Assessment Not Passed</h2>
+                <p className="text-xs text-muted max-w-md mx-auto">
+                  You scored <strong className="text-rose-600 font-bold">{accuracy}%</strong> ({correctCount} of {questions.length} correct). Mastery requires at least 75% accuracy. To complete this course, please rewrite the test.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                <div className="p-3 rounded-2xl bg-surface-secondary border border-muted-border">
+                  <span className="text-[10px] font-bold text-muted uppercase block">Your Score</span>
+                  <span className="text-xl font-extrabold text-rose-600">{accuracy}%</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-surface-secondary border border-muted-border">
+                  <span className="text-[10px] font-bold text-muted uppercase block">Required Pass</span>
+                  <span className="text-xl font-extrabold text-primary">75%</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-4 border-t border-muted-border">
+                <Button variant="primary" size="md" onClick={handleRestart} className="font-bold">
+                  <RotateCcw className="w-4 h-4 mr-1.5" /> Rewrite Test (Retake)
+                </Button>
+                <Button variant="outline" size="md" onClick={() => navigate('/graph')}>
+                  Return to Graph
+                </Button>
+              </div>
+            </Card>
+          );
+        })()
       )}
     </div>
   );

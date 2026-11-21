@@ -41,7 +41,12 @@ export const LoginPage: React.FC = () => {
     setIsLoading(false);
 
     if (error) {
-      setAuthError(error.message || 'Invalid email or password');
+      const msg = error.message || '';
+      if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('network') || msg.includes('521') || msg.includes('503')) {
+        setAuthError('Supabase project is paused or sleeping. Please unpause/restore it in your Supabase Dashboard, or click "Continue as Demo Learner" below.');
+      } else {
+        setAuthError(msg || 'Invalid email or password');
+      }
     } else {
       navigate(from, { replace: true });
     }
@@ -147,7 +152,7 @@ export const LoginPage: React.FC = () => {
             className="w-full border-primary/30 text-primary hover:bg-primary-light/40"
           >
             <Sparkles className="w-4 h-4 mr-2 text-primary" />
-            Continue as Demo Learner (Alex Chen)
+            Continue as Guest Scholar
           </Button>
 
           <p className="mt-6 text-center text-xs text-muted">

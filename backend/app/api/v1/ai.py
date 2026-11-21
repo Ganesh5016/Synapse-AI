@@ -205,6 +205,7 @@ async def delete_conversation(
 # ============================================================================
 
 @router.post("/chat", response_model=APIResponse[RAGQueryResponse])
+@router.post("/ask", response_model=APIResponse[RAGQueryResponse])
 async def chat_rag(
     payload: RAGQueryRequest,
     current_user: AuthenticatedUser = Depends(get_current_user),

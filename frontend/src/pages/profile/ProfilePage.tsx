@@ -22,12 +22,30 @@ import { UserRole, EducationalLevel } from '../../types/auth';
 export const ProfilePage: React.FC = () => {
   const { user, profile, updateProfile, goals, isDemoMode } = useAuth();
 
-  const [displayName, setDisplayName] = useState(profile?.display_name || 'Alex Chen');
+  const initialName = profile?.display_name || 
+                      user?.user_metadata?.display_name || 
+                      user?.user_metadata?.full_name || 
+                      (user?.email ? user.email.split('@')[0] : '');
+
+  const [displayName, setDisplayName] = useState(initialName);
   const [role, setRole] = useState<UserRole>(profile?.role || 'student');
   const [educationalLevel, setEducationalLevel] = useState<EducationalLevel>(profile?.educational_level || 'undergraduate');
-  const [bio, setBio] = useState(profile?.bio || 'Mastering Machine Learning architectures and Bayesian Inference');
+  const [bio, setBio] = useState(profile?.bio || '');
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  React.useEffect(() => {
+    const currentName = profile?.display_name || 
+                        user?.user_metadata?.display_name || 
+                        user?.user_metadata?.full_name || 
+                        (user?.email ? user.email.split('@')[0] : '');
+    if (currentName) {
+      setDisplayName(currentName);
+    }
+    if (profile?.role) setRole(profile.role);
+    if (profile?.educational_level) setEducationalLevel(profile.educational_level);
+    if (profile?.bio !== undefined && profile?.bio !== null) setBio(profile.bio);
+  }, [profile, user]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +98,7 @@ export const ProfilePage: React.FC = () => {
             </div>
             <div className="space-y-1 text-center sm:text-left">
               <h3 className="font-bold text-primary-text text-base">{displayName}</h3>
-              <p className="text-xs text-muted">{user?.email || 'alex.chen@synapse.edu'}</p>
+              <p className="text-xs text-muted">{user?.email || 'Authenticated User'}</p>
               <div className="flex gap-2 pt-1 justify-center sm:justify-start">
                 <Badge variant="primary">{role.toUpperCase()}</Badge>
                 {isDemoMode && <Badge variant="secondary">Demo Mode</Badge>}
@@ -133,7 +151,7 @@ export const ProfilePage: React.FC = () => {
 
             <Input
               label="Account Email (Authenticated)"
-              value={user?.email || 'alex.chen@synapse.edu'}
+              value={user?.email || ''}
               disabled
               helperText="Managed via Supabase Auth credentials"
             />

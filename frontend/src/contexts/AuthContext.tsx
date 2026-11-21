@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useTransition } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
-import { UserProfile, UserPreferences, LearningGoal, OnboardingData } from '../types/auth';
+import { UserProfile, UserPreferences, LearningGoal, OnboardingData, UserRole, EducationalLevel } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -23,11 +23,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEMO_PROFILE: UserProfile = {
   id: 'demo-user-1234-5678-90ab',
-  email: 'alex.chen@synapse.edu',
-  display_name: 'Alex Chen',
+  email: 'scholar@synapse.edu',
+  display_name: 'Scholar',
   avatar_url: null,
   role: 'student',
-  bio: 'Mastering Machine Learning architectures and Bayesian Inference',
+  bio: 'Grounding knowledge in cognitive science and Bayesian mastery',
   educational_level: 'undergraduate',
   onboarding_completed: true,
   created_at: new Date().toISOString(),
@@ -37,7 +37,7 @@ const DEMO_PROFILE: UserProfile = {
 const DEMO_PREFERENCES: UserPreferences = {
   id: 'demo-pref-1',
   user_id: 'demo-user-1234-5678-90ab',
-  daily_study_minutes: 45,
+  daily_study_minutes: 30,
   preferred_days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
   notification_email: true,
   notification_in_app: true,
@@ -45,28 +45,7 @@ const DEMO_PREFERENCES: UserPreferences = {
   light_mode_accent: '#7667F5',
 };
 
-const DEMO_GOALS: LearningGoal[] = [
-  {
-    id: 'demo-goal-1',
-    user_id: 'demo-user-1234-5678-90ab',
-    title: 'Master Transformer Attention Mechanisms',
-    description: 'Understand scaled dot-product attention, multi-head projections, and causal masking.',
-    target_date: '2026-11-30',
-    priority: 'high',
-    status: 'active',
-    progress_percentage: 68.5,
-  },
-  {
-    id: 'demo-goal-2',
-    user_id: 'demo-user-1234-5678-90ab',
-    title: 'Bayesian Knowledge Tracing (BKT) Proofs',
-    description: 'Derive slip, guess, transition, and prior probability updates for learner modeling.',
-    target_date: '2026-12-15',
-    priority: 'medium',
-    status: 'active',
-    progress_percentage: 42.0,
-  },
-];
+const DEMO_GOALS: LearningGoal[] = [];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -81,6 +60,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load active session from Supabase
   useEffect(() => {
     let mounted = true;
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) {
+        setIsLoading(false);
+      }
+    }, 2500);
 
     async function initializeAuth() {
       try {
@@ -121,6 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, [isDemoMode]);
@@ -134,8 +119,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (profileData) {
-        setProfile(profileData as UserProfile);
+      // Resolve authenticated user details from Supabase Auth
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const metaName = currentUser?.user_metadata?.display_name || 
+                       currentUser?.user_metadata?.full_name;
+      const emailRaw = (currentUser?.email || profileData?.email || '').split('@')[0];
+      const fallbackCleanName = emailRaw 
+        ? emailRaw.charAt(0).toUpperCase() + emailRaw.slice(1) 
+        : 'Scholar';
+
+      const hasValidProfileName = Boolean(
+        profileData?.display_name &&
+        profileData.display_name !== 'Alex Chen' &&
+        profileData.display_name !== 'Learner'
+      );
+
+      const resolvedName = hasValidProfileName
+        ? (profileData!.display_name as string)
+        : (metaName || fallbackCleanName);
+
+      const activeProfile: UserProfile = {
+        id: userId,
+        email: currentUser?.email || profileData?.email || '',
+        display_name: resolvedName,
+        avatar_url: currentUser?.user_metadata?.avatar_url || profileData?.avatar_url || null,
+        role: (profileData?.role as UserRole) || 'student',
+        bio: profileData?.bio || '',
+        educational_level: (profileData?.educational_level as EducationalLevel) || 'undergraduate',
+        onboarding_completed: true,
+        created_at: profileData?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setProfile(activeProfile);
+
+      // Upsert so Supabase profiles table always stores the authentic display name
+      if (!profileData || profileData.display_name !== resolvedName) {
+        try {
+          await supabase.from('profiles').upsert(activeProfile);
+        } catch (err) {
+          console.warn('Profile sync warning:', err);
+        }
       }
 
       // 2. Fetch Preferences

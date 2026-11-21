@@ -32,6 +32,7 @@ import { SearchPage } from './pages/search/SearchPage';
 import { AIAssistantPage } from './pages/assistant/AIAssistantPage';
 import { KnowledgeGraphPage } from './pages/graph/KnowledgeGraphPage';
 import { ConceptDetailPage } from './pages/graph/ConceptDetailPage';
+import { CoursePlayerPage } from './pages/course/CoursePlayerPage';
 import { KnowledgeGapsPage } from './pages/mastery/KnowledgeGapsPage';
 import { PracticeCenterPage } from './pages/practice/PracticeCenterPage';
 import { FlashcardsQueuePage } from './pages/flashcards/FlashcardsQueuePage';
@@ -106,7 +107,8 @@ export function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/assistant" element={<AIAssistantPage />} />
             <Route path="/graph" element={<KnowledgeGraphPage />} />
-            <Route path="/concepts/:id" element={<ConceptDetailPage />} />
+            <Route path="/course/:id" element={<CoursePlayerPage />} />
+            <Route path="/concepts/:id" element={<CoursePlayerPage />} />
             <Route path="/practice" element={<PracticeCenterPage />} />
             <Route path="/flashcards" element={<FlashcardsQueuePage />} />
             <Route path="/gaps" element={<KnowledgeGapsPage />} />

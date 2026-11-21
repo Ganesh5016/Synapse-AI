@@ -36,6 +36,15 @@ export const AppShell: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, signOut, isDemoMode } = useAuth();
 
+  const rawDisplayName = profile?.display_name || 
+                         user?.user_metadata?.display_name || 
+                         user?.user_metadata?.full_name || 
+                         (user?.email ? user.email.split('@')[0] : '');
+
+  const accountDisplayName = (rawDisplayName && rawDisplayName !== 'Alex Chen' && rawDisplayName !== 'Learner')
+    ? (rawDisplayName.charAt(0).toUpperCase() + rawDisplayName.slice(1))
+    : 'Scholar';
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -181,12 +190,12 @@ export const AppShell: React.FC = () => {
           <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} p-2 rounded-xl bg-surface-secondary/60`}>
             <div className="flex items-center gap-2.5 overflow-hidden">
               <div className="w-8 h-8 rounded-full gradient-accent text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                {profile?.display_name ? profile.display_name.charAt(0).toUpperCase() : 'U'}
+                {accountDisplayName.charAt(0).toUpperCase()}
               </div>
               {!sidebarCollapsed && (
                 <div className="truncate text-left">
                   <p className="text-xs font-semibold text-primary-text truncate">
-                    {profile?.display_name || user?.email?.split('@')[0] || 'Learner'}
+                    {accountDisplayName}
                   </p>
                   <p className="text-[10px] text-muted capitalize truncate">
                     {profile?.role || 'Student'} {isDemoMode && '(Demo)'}
@@ -282,10 +291,10 @@ export const AppShell: React.FC = () => {
                 className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-secondary transition-colors"
               >
                 <div className="w-8 h-8 rounded-full gradient-accent text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                  {profile?.display_name ? profile.display_name.charAt(0).toUpperCase() : 'U'}
+                  {accountDisplayName.charAt(0).toUpperCase()}
                 </div>
                 <span className="hidden md:inline-block text-xs font-semibold text-primary-text">
-                  {profile?.display_name || 'My Account'}
+                  {accountDisplayName}
                 </span>
               </button>
 
